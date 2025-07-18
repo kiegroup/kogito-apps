@@ -2,7 +2,6 @@ pom.xml;data-audit,security-commons,explainability,trusty,jitexecutor
 apps-integration-tests/integration-tests-jobs-service/pom.xml;integration-tests-jobs-service-springboot
 apps-integration-tests/integration-tests-jobs-service/integration-tests-jobs-service-quarkus/pom.xml;integration-tests-jobs-service-quarkus-messaging
 apps-integration-tests/integration-tests-data-index-service/pom.xml;integration-tests-data-index-service-common,integration-tests-data-index-service-quarkus,integration-tests-data-index-service-springboot
-data-index/data-index-service/pom.xml;data-index-service-infinispan,data-index-service-mongodb
 data-index/data-index-storage/pom.xml;data-index-storage-common,data-index-storage-infinispan,data-index-storage-mongodb,data-index-storage-postgresql-reporting
 data-index/kogito-addons-quarkus-data-index/pom.xml;kogito-addons-quarkus-data-index-infinispan,kogito-addons-quarkus-data-index-mongodb,kogito-addons-quarkus-data-index-jpa
 data-index/kogito-addons-quarkus-data-index/kogito-addons-quarkus-data-index-inmemory/pom.xml;integration-tests-process
