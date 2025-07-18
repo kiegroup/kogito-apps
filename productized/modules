@@ -2,9 +2,5 @@ apps-integration-tests/integration-tests-jobs-service/pom.xml;integration-tests-
 apps-integration-tests/integration-tests-jobs-service/integration-tests-jobs-service-quarkus/pom.xml;integration-tests-jobs-service-quarkus-messaging
 apps-integration-tests/integration-tests-data-index-service/pom.xml;integration-tests-data-index-service-common,integration-tests-data-index-service-quarkus,integration-tests-data-index-service-springboot
 data-index/data-index-storage/pom.xml;data-index-storage-common,data-index-storage-mongodb,data-index-storage-postgresql-reporting
-data-index/kogito-addons-quarkus-data-index/kogito-addons-quarkus-data-index-inmemory/pom.xml;integration-tests-process
-data-index/kogito-addons-quarkus-data-index/kogito-addons-quarkus-data-index-postgresql/pom.xml;integration-tests-process
-data-index/kogito-addons-quarkus-data-index-persistence/pom.xml;kogito-addons-quarkus-data-index-persistence-infinispan,kogito-addons-quarkus-data-index-persistence-mongodb,kogito-addons-quarkus-data-index-persistence-jpa
-data-index/kogito-addons-quarkus-data-index-persistence/kogito-addons-quarkus-data-index-persistence-postgresql/pom.xml;integration-tests-process
 jobs-service/pom.xml;jobs-service-infinispan,jobs-service-mongodb
-persistence-commons/pom.xml;persistence-commons-infinispan,persistence-commons-mongodb,persistence-commons-redis,persistence-commons-reporting-parent
+persistence-commons/pom.xml;persistence-commons-mongodb,persistence-commons-redis,persistence-commons-reporting-parent
