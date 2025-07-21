@@ -1,5 +1,6 @@
 apps-integration-tests/integration-tests-jobs-service/pom.xml;integration-tests-jobs-service-springboot
 apps-integration-tests/integration-tests-jobs-service/integration-tests-jobs-service-quarkus/pom.xml;integration-tests-jobs-service-quarkus-messaging
+data-index/data-index-quarkus/kogito-addons-quarkus-data-index-persistence/kogito-addons-quarkus-data-index-persistence-postgresql/pom.xml;integration-tests-process
 apps-integration-tests/integration-tests-data-index-service/pom.xml;integration-tests-data-index-service-common,integration-tests-data-index-service-quarkus,integration-tests-data-index-service-springboot
 data-index/data-index-storage/pom.xml;data-index-storage-common,data-index-storage-mongodb,data-index-storage-postgresql-reporting
 data-index/data-index-quarkus/pom.xml;data-index-service-mongodb
