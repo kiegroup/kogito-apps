@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>kogito-apps-build-parent</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>9.104.0</version>
     <relativePath>../kogito-apps-build-parent/pom.xml</relativePath>
   </parent>
   
@@ -36,7 +36,6 @@
   <modules>
     <module>jobs-common-embedded</module>
     <module>kogito-addons-quarkus-embedded-jobs</module>
-    <module>kogito-addons-springboot-embedded-jobs</module>
     <module>kogito-addons-embedded-jobs-jpa</module>
   </modules>
 </project>

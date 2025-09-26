@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>kogito-apps-build-parent</artifactId>
-    <version>999-SNAPSHOT</version>
+    <version>9.104.0</version>
     <relativePath>../kogito-apps-build-parent/pom.xml</relativePath>
   </parent>
 
@@ -45,8 +45,6 @@
     <module>kogito-addons-jobs-service</module>
     <module>jobs-service-messaging-kafka</module>
     <module>jobs-service-messaging-http</module>
-    <module>jobs-service-infinispan</module>
-    <module>jobs-service-mongodb</module>
   </modules>
 
   <dependencyManagement>
