@@ -52,7 +52,8 @@ jobs:
           annotations-prefix: ${{ runner.os }}-${{ matrix.java-version }}/${{ matrix.maven-version }}
           starting-project: kiegroup/${{ matrix.repository }}
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-          BUILD_MVN_OPTS: ${{ matrix.env_BUILD_MVN_OPTS }}
+          env:
+            BUILD_MVN_OPTS: ${{ matrix.env_BUILD_MVN_OPTS }}
         env: 
           KOGITO_EXAMPLES_SUBFOLDER_POM: ${{ matrix.env_KOGITO_EXAMPLES_SUBFOLDER_POM }}
       - name: Surefire Report
