@@ -17,4 +17,4 @@
 # under the License.
 #
 
-quarkus.kafka.devservices.image-name=${container.image.kafka}
+org.kie.kogito.index.addon.config.DataIndexConfigBuilderCustomizer
