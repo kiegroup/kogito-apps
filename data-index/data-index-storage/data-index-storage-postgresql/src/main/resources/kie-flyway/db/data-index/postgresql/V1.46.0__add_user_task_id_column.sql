@@ -16,24 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.kie.kogito.index.addon.config;
 
-import java.util.Optional;
-
-import io.quarkus.runtime.annotations.ConfigPhase;
-import io.quarkus.runtime.annotations.ConfigRoot;
-import io.smallrye.config.ConfigMapping;
-
-@ConfigMapping(prefix = "kogito.data-index")
-@ConfigRoot(phase = ConfigPhase.BUILD_TIME)
-public interface DataIndexBuildConfig {
-
-    /**
-     * Configures whether to use Reactive or Blocking behaviour for the RouterProducer and EventConsumer components.
-     * If the property is set, and has the value true, blocking behaviour is configured, and the
-     * BlockingGraphqlRouterProducer and BlockingMessagingEventConsumer are used.
-     * In any other case, the ReactiveGraphqlRouterProducer and ReactiveMessagingEventConsumer are used.
-     */
-    Optional<Boolean> blocking();
-
-}
+ALTER table tasks ADD COLUMN user_task_id VARCHAR(255);

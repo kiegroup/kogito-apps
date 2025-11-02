@@ -17,22 +17,4 @@
 # under the License.
 #
 
-name: Kogito Data Index JPA Quarkus Add-On
-description: Runs the Kogito Data Index embedded with JPA persistence
-metadata:
-  keywords:
-    - data-index
-    - kogito
-    - processes
-    - workflows
-    - tasks
-    - jobs
-    - BPMN
-    - JPA
-  guide: https://quarkus.io/guides/kogito
-  categories:
-    - "business-automation"
-  status: "stable"
-  config:
-    - "kogito.data-index."
-    - "kogito.dataindex."
+org.kie.kogito.index.addon.config.DataIndexConfigBuilderCustomizer
