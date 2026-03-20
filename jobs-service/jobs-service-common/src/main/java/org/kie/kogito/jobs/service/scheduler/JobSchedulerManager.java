@@ -208,15 +208,6 @@ public class JobSchedulerManager {
         Date triggerFireTime = jobDetails.getTrigger().hasNextFireTime();
         ZonedDateTime nextFireTime = triggerFireTime != null ? DateUtil.instantToZonedDateTime(triggerFireTime.toInstant()) : null;
         boolean scheduled = scheduler.scheduled(jobDetails.getId()).isPresent();
-        // cancel an overdue timer to have it rescheduled
-        if (!initialLoading.get() && nextFireTime != null && nextFireTime.isBefore(DateUtil.now())) {
-            LOGGER.debug("Job found, id: {}, nextFireTime: {}, created: {}, status: {} is overdue and will be rescheduled", jobDetails.getId(),
-                    nextFireTime,
-                    jobDetails.getCreated(),
-                    jobDetails.getStatus());
-            scheduler.cancel(jobDetails.getId());
-            return true;
-        }
         LOGGER.debug("Job found, id: {}, nextFireTime: {}, created: {}, status: {}, already scheduled: {}", jobDetails.getId(),
                 nextFireTime,
                 jobDetails.getCreated(),
