@@ -28,11 +28,7 @@
   <artifactId>kogito-apps</artifactId>
   <packaging>pom</packaging>
   <name>Kogito Apps</name>
-  <description>Kogito Apps</description>
-  <organization>
-    <name>The Apache Software Foundation</name>
-    <url>https://apache.org/</url>
-  </organization>
+  <description>This repository is a fork of https://github.com/apache/incubator-kie-kogito-apps used for the purposes od SonataFlow.</description>
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
@@ -41,42 +37,69 @@
     </license>
   </licenses>
   <scm>
-    <connection>scm:git:https://github.com/apache/incubator-kie-kogito-apps.git</connection>
-    <developerConnection>scm:git:https://github.com/apache/incubator-kie-kogito-apps.git</developerConnection>
-    <url>https://github.com/apache/incubator-kie-kogito-apps</url>
+    <connection>scm:git:https://github.com/kiegroup/kogito-apps.git</connection>
+    <developerConnection>scm:git:https://github.com/kiegroup/kogito-apps.git</developerConnection>
+    <url>https://github.com/kiegroup/kogito-apps</url>
   </scm>
-  <developers>
-    <developer>
-      <name>The Apache KIE Team</name>
-      <email>dev@kie.apache.org</email>
-      <url>https://kie.apache.org</url>
-      <organization>Apache Software Foundation</organization>
-      <organizationUrl>http://apache.org/</organizationUrl>
-    </developer>
-  </developers>
-  <mailingLists>
-    <mailingList>
-      <name>Development List</name>
-      <subscribe>dev-subscribe@kie.apache.org</subscribe>
-      <unsubscribe>dev-unsubscribe@kie.apache.org</unsubscribe>
-      <post>dev@kie.apache.org</post>
-      <archive>https://lists.apache.org/list.html?dev@kie.apache.org</archive>
-    </mailingList>
-    <mailingList>
-      <name>User List</name>
-      <subscribe>users-subscribe@kie.apache.org</subscribe>
-      <unsubscribe>users-unsubscribe@kie.apache.org</unsubscribe>
-      <post>users@kie.apache.org</post>
-      <archive>https://lists.apache.org/list.html?users@kie.apache.org</archive>
-    </mailingList>
-    <mailingList>
-      <name>Commits List</name>
-      <subscribe>commits-subscribe@kie.apache.org</subscribe>
-      <unsubscribe>commits-unsubscribe@kie.apache.org</unsubscribe>
-      <post>commits@kie.apache.org</post>
-      <archive>https://lists.apache.org/list.html?commits@kie.apache.org</archive>
-    </mailingList>
-  </mailingLists>
+
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>GitHub Packages</name>
+      <url>https://maven.pkg.github.com/kubesmarts/sonataflow-maven-repository</url>
+    </repository>
+    <snapshotRepository>
+      <id>github</id>
+      <name>GitHub Packages</name>
+      <url>https://maven.pkg.github.com/kubesmarts/sonataflow-maven-repository</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <repositories>
+    <repository>
+      <id>central</id>
+      <name>Central</name>
+      <url>https://repo1.maven.org/maven2/</url>
+    </repository>
+    <repository>
+      <id>github</id>
+      <name>GitHub Repository</name>
+      <url>https://maven.pkg.github.com/kubesmarts/sonataflow-maven-repository</url>
+    </repository>
+    <repository>
+      <id>redhat-ga-repository</id>
+      <url>https://maven.repository.redhat.com/ga</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>central</id>
+      <name>Central</name>
+      <url>https://repo1.maven.org/maven2/</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>github</id>
+      <name>GitHub Repository</name>
+      <url>https://maven.pkg.github.com/kubesmarts/sonataflow-maven-repository</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>redhat-ga-plugin-repository</id>
+      <url>https://maven.repository.redhat.com/ga</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.outputTimestamp>2024-01-16T00:00:00Z</project.build.outputTimestamp>
@@ -96,17 +119,6 @@
       </plugins>
     </pluginManagement>
   </build>
-  <repositories>
-    <!-- useful to resolve parent pom when it is a SNAPSHOT -->
-    <repository>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <id>apache.snapshots</id>
-      <name>Apache Snapshot Repository</name>
-      <url>https://repository.apache.org/snapshots</url>
-    </repository>
-  </repositories>
   <modules>
     <module>kogito-apps-bom</module>
     <module>kogito-apps-build-parent</module>
