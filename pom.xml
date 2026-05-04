@@ -28,6 +28,10 @@
   <artifactId>kogito-apps</artifactId>
   <packaging>pom</packaging>
   <name>Kogito Apps</name>
+  <organization>
+    <name>The Apache Software Foundation</name>
+    <url>https://apache.org/</url>
+  </organization>
   <description>This repository is a fork of https://github.com/apache/incubator-kie-kogito-apps used for the purposes od SonataFlow.</description>
   <licenses>
     <license>
