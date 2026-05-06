@@ -35,7 +35,7 @@
 
   <properties>
     <java.module.name>org.kie.kogito.ddl</java.module.name>
-    <db.scripts.descriptor>src/assembly/multi-repo-zip.xml</db.scripts.descriptor>
+    <db.scripts.descriptor>src/assembly/productized-multi-repo-zip.xml</db.scripts.descriptor>
   </properties>
 
   <dependencies>
@@ -72,17 +72,4 @@
       </plugin>
     </plugins>
   </build>
-  <profiles>
-    <profile>
-      <id>productized</id>
-      <activation>
-        <property>
-          <name>productized</name>
-        </property>
-      </activation>
-      <properties>
-        <db.scripts.descriptor>src/assembly/productized-multi-repo-zip.xml</db.scripts.descriptor>
-      </properties>
-    </profile>
-  </profiles>
 </project>
