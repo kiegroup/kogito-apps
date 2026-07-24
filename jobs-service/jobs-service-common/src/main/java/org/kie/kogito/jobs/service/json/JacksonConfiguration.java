@@ -21,6 +21,7 @@ package org.kie.kogito.jobs.service.json;
 import org.kie.kogito.jobs.DurationExpirationTime;
 import org.kie.kogito.jobs.ExactExpirationTime;
 import org.kie.kogito.jobs.JobDescription;
+import org.kie.kogito.jobs.api.event.serialization.JobJacksonModule;
 import org.kie.kogito.jobs.service.api.serialization.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +55,7 @@ public class JacksonConfiguration {
             kogitoCustomModule.addDeserializer(ExactExpirationTime.class, new ExactExpirationTimeDeserializer());
             objectMapper
                     .registerModule(new JavaTimeModule())
+                    .registerModule(new JobJacksonModule())
                     .registerModule(kogitoCustomModule)
                     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                     .disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)

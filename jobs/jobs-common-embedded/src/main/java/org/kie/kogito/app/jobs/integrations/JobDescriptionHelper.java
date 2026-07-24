@@ -44,7 +44,7 @@ public class JobDescriptionHelper {
     }
 
     public static JobDescription newJobDescription(JobDescription jobDescription, Trigger trigger) {
-        List<JobDescriptionMerger> mergers = List.of(new ProcessInstanceJobDescriptionMerger(), new ProcessJobDescriptionMerger(), new UserTaskInstanceJobDescriptorMerger());
+        List<JobDescriptionMerger> mergers = List.of(new ProcessInstanceJobDescriptionMerger(), new ProcessJobDescriptionMerger());
         return mergers.stream().filter(merger -> merger.accept(jobDescription)).map(merger -> merger.mergeTrigger(jobDescription, trigger)).findFirst().orElseThrow();
     }
 }

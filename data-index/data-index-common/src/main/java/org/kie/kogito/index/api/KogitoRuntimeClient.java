@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import org.kie.api.definition.process.KogitoProcessId;
 import org.kie.kogito.index.model.Job;
 import org.kie.kogito.index.model.Node;
 import org.kie.kogito.index.model.ProcessDefinition;
@@ -46,9 +47,9 @@ public interface KogitoRuntimeClient {
 
     CompletableFuture<String> getProcessInstanceDiagram(String serviceURL, ProcessInstance processInstance);
 
-    CompletableFuture<String> getProcessDefinitionSourceFileContent(String serviceURL, String processId);
+    CompletableFuture<String> getProcessDefinitionSourceFileContent(String serviceURL, KogitoProcessId processId);
 
-    CompletableFuture<List<Node>> getProcessDefinitionNodes(String serviceURL, String processId);
+    CompletableFuture<List<Node>> getProcessDefinitionNodes(String serviceURL, KogitoProcessId processId);
 
     CompletableFuture<String> triggerNodeInstance(String serviceURL, ProcessInstance processInstance, String nodeDefinitionId);
 

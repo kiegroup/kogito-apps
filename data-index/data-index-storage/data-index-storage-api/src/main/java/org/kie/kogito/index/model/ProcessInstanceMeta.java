@@ -22,6 +22,9 @@ import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.Set;
 
+import org.kie.api.definition.process.KogitoProcessId;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ProcessInstanceMeta {
@@ -53,6 +56,8 @@ public class ProcessInstanceMeta {
     private String cloudEventId;
     private String cloudEventSource;
 
+    private KogitoProcessId kogitoProcessId;
+
     public String getId() {
         return id;
     }
@@ -61,6 +66,14 @@ public class ProcessInstanceMeta {
         if (id != null && !id.trim().isEmpty()) {
             this.id = id;
         }
+    }
+
+    @JsonIgnore
+    public KogitoProcessId getKogitoProcessId() {
+        if (kogitoProcessId == null) {
+            kogitoProcessId = new KogitoProcessId(processId, version);
+        }
+        return kogitoProcessId;
     }
 
     public String getProcessId() {

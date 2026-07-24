@@ -53,8 +53,7 @@ public class ProcessDefinitionRegister {
     void startup(@Observes StartupEvent event, Instance<Processes> processesInstance, Application app, DataIndexStorageService storage, KogitoRuntimeClient client) {
         if (processesInstance.isResolvable()) {
             Processes processes = processesInstance.get();
-            processes.processIds().stream()
-                    .map(processes::processById)
+            processes.stream()
                     .map(mapProcessDefinition(app.config().addons().availableAddons(), kogitoServiceUrl.orElse(null), client))
                     .forEach(process -> {
                         LOGGER.debug("Registering process definition with id: {}", process.getId());
@@ -76,7 +75,7 @@ public class ProcessDefinitionRegister {
             // See ProcessInstanceEventBatch.buildSource
             pd.setEndpoint(endpoint + "/" + (p.id().contains(".") ? p.id().substring(p.id().lastIndexOf('.') + 1) : p.id()));
             try {
-                String content = client.getProcessDefinitionSourceFileContent(null, p.id()).get();
+                String content = client.getProcessDefinitionSourceFileContent(null, p.processId()).get();
                 pd.setSource(content);
             } catch (InterruptedException e) {
                 LOGGER.warn("Interrupted thread while registering process definition with id: {}", p.id(), e);
@@ -85,7 +84,7 @@ public class ProcessDefinitionRegister {
                 throw new DataIndexServiceException(format("Failed to register process definition with id: %s", p.id()), e);
             }
             try {
-                pd.setNodes(client.getProcessDefinitionNodes(null, p.id()).get());
+                pd.setNodes(client.getProcessDefinitionNodes(null, p.processId()).get());
             } catch (InterruptedException e) {
                 LOGGER.warn("Interrupted thread while registering process definition with id: {}", p.id(), e);
                 Thread.currentThread().interrupt();

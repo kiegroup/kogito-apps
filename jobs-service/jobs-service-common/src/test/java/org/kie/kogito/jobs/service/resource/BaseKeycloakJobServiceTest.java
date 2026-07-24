@@ -35,7 +35,11 @@ import org.kie.kogito.testcontainers.quarkus.KeycloakQuarkusTestResource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.restassured.RestAssured;
+import io.restassured.config.ObjectMapperConfig;
+import io.restassured.config.RestAssuredConfig;
 import io.restassured.http.ContentType;
+import io.restassured.internal.mapping.Jackson2Mapper;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 
@@ -74,6 +78,11 @@ public abstract class BaseKeycloakJobServiceTest {
 
     @BeforeEach
     public void init() throws Exception {
+        RestAssured.config = RestAssuredConfig.config().objectMapperConfig(
+                ObjectMapperConfig.objectMapperConfig().defaultObjectMapper(
+                        new Jackson2Mapper((type, charset) -> {
+                            return objectMapper;
+                        })));
         //health check - wait to be ready
         awaitReadyHealthCheck(2, MINUTES);
     }

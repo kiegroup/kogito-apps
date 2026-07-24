@@ -24,8 +24,10 @@ import org.kie.kogito.index.jpa.model.ProcessDefinitionEntity;
 import org.kie.kogito.index.model.ProcessDefinition;
 import org.kie.kogito.jackson.utils.JsonObjectUtils;
 import org.mapstruct.AfterMapping;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.factory.Mappers;
 
@@ -37,9 +39,11 @@ public interface ProcessDefinitionEntityMapper {
 
     ProcessDefinitionEntityMapper INSTANCE = Mappers.getMapper(ProcessDefinitionEntityMapper.class);
 
+    @BeanMapping(ignoreUnmappedSourceProperties = { "kogitoProcessId" })
     ProcessDefinitionEntity mapToEntity(ProcessDefinition pd);
 
     @InheritInverseConfiguration
+    @Mapping(target = "kogitoProcessId", ignore = true)
     ProcessDefinition mapToModel(ProcessDefinitionEntity pd);
 
     default byte[] map(String value) {

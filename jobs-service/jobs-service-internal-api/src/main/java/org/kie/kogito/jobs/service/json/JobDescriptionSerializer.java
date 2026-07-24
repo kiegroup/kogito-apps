@@ -23,7 +23,6 @@ import java.io.IOException;
 import org.kie.kogito.jobs.JobDescription;
 import org.kie.kogito.jobs.descriptors.ProcessInstanceJobDescription;
 import org.kie.kogito.jobs.descriptors.ProcessJobDescription;
-import org.kie.kogito.jobs.descriptors.UserTaskInstanceJobDescription;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -45,22 +44,17 @@ public class JobDescriptionSerializer extends StdSerializer<JobDescription> {
         jgen.writeNumberField("priority", value.priority());
         jgen.writeObjectField("expirationTime", value.expirationTime());
         if (value instanceof ProcessJobDescription processJobDescription) {
-            jgen.writeStringField("processId", processJobDescription.processId());
+            jgen.writeStringField("processId", processJobDescription.processId().id());
+            jgen.writeStringField("version", processJobDescription.processId().version());
         } else if (value instanceof ProcessInstanceJobDescription jobDescription) {
             jgen.writeStringField("timerId", jobDescription.timerId());
             jgen.writeStringField("processInstanceId", jobDescription.processInstanceId());
             jgen.writeStringField("rootProcessInstanceId", jobDescription.rootProcessInstanceId());
-            jgen.writeStringField("processId", jobDescription.processId());
+            jgen.writeStringField("processId", jobDescription.processId().id());
+            jgen.writeStringField("version", jobDescription.processId().version());
             jgen.writeStringField("rootProcessId", jobDescription.rootProcessId());
             jgen.writeStringField("nodeInstanceId", jobDescription.nodeInstanceId());
             jgen.writeEndObject();
-        } else if (value instanceof UserTaskInstanceJobDescription userTaskInstanceJobDescription) {
-            jgen.writeStringField("userTaskInstanceId", userTaskInstanceJobDescription.userTaskInstanceId());
-            jgen.writeStringField("processId", userTaskInstanceJobDescription.processId());
-            jgen.writeStringField("processInstanceId", userTaskInstanceJobDescription.processInstanceId());
-            jgen.writeStringField("nodeInstanceId", userTaskInstanceJobDescription.nodeInstanceId());
-            jgen.writeStringField("rootProcessInstanceId", userTaskInstanceJobDescription.rootProcessInstanceId());
-            jgen.writeStringField("rootProcessId", userTaskInstanceJobDescription.rootProcessId());
         }
         jgen.writeEndObject();
     }

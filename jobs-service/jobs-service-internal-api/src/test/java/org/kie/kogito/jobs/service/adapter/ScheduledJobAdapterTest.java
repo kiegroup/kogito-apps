@@ -23,6 +23,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.kie.api.definition.process.KogitoProcessId;
 import org.kie.kogito.jobs.api.JobBuilder;
 import org.kie.kogito.jobs.service.api.recipient.http.HttpRecipient;
 import org.kie.kogito.jobs.service.model.JobDetails;
@@ -52,7 +53,7 @@ class ScheduledJobAdapterTest {
     public static final long INTERVAL = 500;
     public static final String ROOT_PROCESS_INSTANCE_ID = "ID";
     public static final String ROOT_PROCESS_ID = "";
-    public static final String PROCESS_ID = "ID";
+    public static final KogitoProcessId PROCESS_ID = new KogitoProcessId("ID", "VERSION");
     public static final String PROCESS_INSTANCE_ID = "ID";
     private static final String NODE_INSTANCE_ID = "nodeId";
 
@@ -156,7 +157,8 @@ class ScheduledJobAdapterTest {
                 .id(ID)
                 .priority(PRIORITY)
                 .recipient(new RecipientInstance(HttpRecipient.builder().forStringPayload().url(ENDPOINT)
-                        .header("processId", PROCESS_ID)
+                        .header("processId", PROCESS_ID.id())
+                        .header("processVersion", PROCESS_ID.version())
                         .header("processInstanceId", PROCESS_INSTANCE_ID)
                         .header("rootProcessInstanceId", ROOT_PROCESS_INSTANCE_ID)
                         .header("rootProcessId", ROOT_PROCESS_ID)
@@ -200,7 +202,8 @@ class ScheduledJobAdapterTest {
         assertThat(jobDetails.getRecipient()).isInstanceOf(RecipientInstance.class);
         HttpRecipient recipient = (HttpRecipient) jobDetails.getRecipient().getRecipient();
         assertThat(recipient.getUrl()).isEqualTo(ENDPOINT);
-        assertThat(recipient.getHeader("processId")).isEqualTo(PROCESS_ID);
+        assertThat(recipient.getHeader("processId")).isEqualTo(PROCESS_ID.id());
+        assertThat(recipient.getHeader("processVersion")).isEqualTo(PROCESS_ID.version());
         assertThat(recipient.getHeader("processInstanceId")).isEqualTo(PROCESS_INSTANCE_ID);
         assertThat(recipient.getHeader("rootProcessId")).isEqualTo(ROOT_PROCESS_ID);
         assertThat(recipient.getHeader("rootProcessInstanceId")).isEqualTo(ROOT_PROCESS_INSTANCE_ID);

@@ -27,6 +27,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.kie.api.definition.process.KogitoProcessId;
 import org.kie.kogito.event.process.ProcessDefinitionDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceStateDataEvent;
@@ -192,7 +193,7 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
         indexProcessCloudEvent(startEvent);
 
         checkOkResponse("{ \"query\" : \"query { ProcessInstances (where: { id: {equal: \\\"" + processInstanceId + "\\\"}}) { nodeDefinitions { id }} }\" }");
-        verify(dataIndexApiClient).getProcessDefinitionNodes(eq("http://localhost:8080"), eq(processId));
+        verify(dataIndexApiClient).getProcessDefinitionNodes(eq("http://localhost:8080"), eq(new KogitoProcessId(processId)));
     }
 
     @Test
@@ -219,7 +220,7 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
 
         checkOkResponse("{ \"query\" : \"query { ProcessInstances (where: { id: {equal: \\\"" + processInstanceId + "\\\"}}) {source} }\" }");
 
-        verify(dataIndexApiClient).getProcessDefinitionSourceFileContent(eq("http://localhost:8080"), eq(processId));
+        verify(dataIndexApiClient).getProcessDefinitionSourceFileContent(eq("http://localhost:8080"), eq(new KogitoProcessId(processId)));
     }
 
     @Test

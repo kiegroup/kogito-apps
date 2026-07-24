@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.kie.kogito.event.DataEvent;
 import org.kie.kogito.event.job.JobInstanceDataEvent;
+import org.kie.kogito.jobs.api.event.serialization.JobJacksonModule;
 import org.kie.kogito.jobs.service.model.ScheduledJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ public class TestEventPublisherWithCapture extends TestEventPublisher {
     public TestEventPublisherWithCapture() {
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
+        this.objectMapper.registerModule(new JobJacksonModule());
     }
 
     @Override

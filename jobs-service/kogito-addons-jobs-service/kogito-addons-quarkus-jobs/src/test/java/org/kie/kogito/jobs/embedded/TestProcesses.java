@@ -18,35 +18,37 @@
  */
 package org.kie.kogito.jobs.embedded;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
+import java.util.Iterator;
 
 import org.kie.kogito.Model;
 import org.kie.kogito.process.Process;
-import org.kie.kogito.process.ProcessInstance;
 import org.kie.kogito.process.ProcessInstances;
 import org.kie.kogito.process.Processes;
 import org.mockito.Mockito;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class TestProcesses implements Processes {
 
-    @Override
-    public Process<? extends Model> processById(String processId) {
-        Process<? extends Model> process = Mockito.mock(Process.class);
-        ProcessInstances instances = Mockito.mock(ProcessInstances.class);
+    private Process process = Mockito.mock(Process.class);
+    private ProcessInstances instances = Mockito.mock(ProcessInstances.class);
+    private Collection<Process<? extends Model>> processes;
+
+    @PostConstruct
+    void setup() {
+        process = Mockito.mock(Process.class);
+        instances = Mockito.mock(ProcessInstances.class);
+        processes = new ArrayList<>();
+        processes.add(process);
         Mockito.when(process.instances()).thenReturn(instances);
-
-        Mockito.when(instances.findById(Mockito.any())).thenReturn(Optional.of(Mockito.mock(ProcessInstance.class)));
-        return process;
     }
 
     @Override
-    public Collection<String> processIds() {
-        return Collections.emptyList();
+    public Iterator<Process<? extends Model>> iterator() {
+        return processes.iterator();
     }
-
 }

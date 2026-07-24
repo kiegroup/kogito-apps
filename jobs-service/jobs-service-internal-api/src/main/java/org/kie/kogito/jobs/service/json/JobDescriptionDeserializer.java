@@ -19,15 +19,13 @@
 package org.kie.kogito.jobs.service.json;
 
 import java.io.IOException;
-import java.util.HashMap;
 
+import org.kie.api.definition.process.KogitoProcessId;
 import org.kie.kogito.jobs.ExpirationTime;
 import org.kie.kogito.jobs.JobDescription;
 import org.kie.kogito.jobs.descriptors.ProcessInstanceJobDescription;
 import org.kie.kogito.jobs.descriptors.ProcessInstanceJobDescriptionBuilder;
 import org.kie.kogito.jobs.descriptors.ProcessJobDescription;
-import org.kie.kogito.jobs.descriptors.UserTaskInstanceJobDescription;
-import org.kie.kogito.jobs.descriptors.UserTaskInstanceJobDescriptionBuilder;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -54,10 +52,11 @@ public class JobDescriptionDeserializer extends StdDeserializer<JobDescription> 
                 case "ProcessJobDescription": {
                     String id = ofNullable(node.get("id")).map(JsonNode::textValue).orElse(null);
                     String processId = ofNullable(node.get("processId")).map(JsonNode::textValue).orElse(null);
+                    String version = ofNullable(node.get("version")).map(JsonNode::textValue).orElse(null);
                     Integer priority = ofNullable(node.get("priority")).map(JsonNode::asInt).orElse(0);
                     String expirationTimeType = node.get("expirationTime").get("@type").asText();
                     ExpirationTime expirationTime = (ExpirationTime) ctxt.readTreeAsValue(node.get("expirationTime"), Class.forName(expirationTimeType));
-                    return ProcessJobDescription.of(expirationTime, priority, processId, id);
+                    return ProcessJobDescription.of(expirationTime, priority, new KogitoProcessId(processId, version), id);
                 }
                 case "ProcessInstanceJobDescription": {
                     ProcessInstanceJobDescriptionBuilder builder = ProcessInstanceJobDescription.newProcessInstanceJobDescriptionBuilder();
@@ -69,27 +68,10 @@ public class JobDescriptionDeserializer extends StdDeserializer<JobDescription> 
                     ofNullable(node.get("timerId")).ifPresent(e -> builder.timerId(e.textValue()));
                     ofNullable(node.get("processInstanceId")).ifPresent(e -> builder.processInstanceId(e.textValue()));
                     ofNullable(node.get("rootProcessInstanceId")).ifPresent(e -> builder.rootProcessInstanceId(e.textValue()));
-                    ofNullable(node.get("processId")).ifPresent(e -> builder.processId(e.textValue()));
+                    ofNullable(node.get("processId")).ifPresent(e -> builder.processId(new KogitoProcessId(e.textValue(), ofNullable(node.get("version")).map(JsonNode::textValue).orElse(null))));
                     ofNullable(node.get("rootProcessId")).ifPresent(e -> builder.rootProcessId(e.textValue()));
                     ofNullable(node.get("nodeInstanceId")).ifPresent(e -> builder.nodeInstanceId(e.textValue()));
 
-                    return builder.build();
-                }
-                case "UserTaskInstanceJobDescription": {
-                    UserTaskInstanceJobDescriptionBuilder builder = UserTaskInstanceJobDescription.newUserTaskInstanceJobDescriptionBuilder();
-                    ofNullable(node.get("id")).ifPresent(e -> builder.id(e.textValue()));
-                    ofNullable(node.get("priority")).ifPresent(e -> builder.priority(e.asInt()));
-                    String expirationTimeType = node.get("expirationTime").get("@type").asText();
-                    builder.expirationTime((ExpirationTime) ctxt.readTreeAsValue(node.get("expirationTime"), Class.forName(expirationTimeType)));
-
-                    ofNullable(node.get("userTaskInstanceId")).ifPresent(e -> builder.userTaskInstanceId(e.textValue()));
-                    var metadata = new HashMap<String, Object>();
-                    ofNullable(node.get("processId")).ifPresent(e -> metadata.put("ProcessId", e.textValue()));
-                    ofNullable(node.get("processInstanceId")).ifPresent(e -> metadata.put("ProcessInstanceId", e.textValue()));
-                    ofNullable(node.get("nodeInstanceId")).ifPresent(e -> metadata.put("NodeInstanceId", e.textValue()));
-                    ofNullable(node.get("rootProcessInstanceId")).ifPresent(e -> metadata.put("RootProcessInstanceId", e.textValue()));
-                    ofNullable(node.get("rootProcessId")).ifPresent(e -> metadata.put("RootProcessId", e.textValue()));
-                    builder.metadata(metadata);
                     return builder.build();
                 }
             }

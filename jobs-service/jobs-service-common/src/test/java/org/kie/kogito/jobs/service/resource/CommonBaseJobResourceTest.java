@@ -23,12 +23,17 @@ import java.io.IOException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.kie.api.definition.process.KogitoProcessId;
 import org.kie.kogito.jobs.service.scheduler.impl.TimerDelegateJobScheduler;
 import org.kie.kogito.jobs.service.scheduler.impl.VertxTimerServiceScheduler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.restassured.RestAssured;
+import io.restassured.config.ObjectMapperConfig;
+import io.restassured.config.RestAssuredConfig;
 import io.restassured.http.ContentType;
+import io.restassured.internal.mapping.Jackson2Mapper;
 import io.restassured.response.ValidatableResponse;
 
 import jakarta.inject.Inject;
@@ -41,7 +46,7 @@ import static org.kie.kogito.jobs.service.health.HealthCheckUtils.awaitReadyHeal
 
 public abstract class CommonBaseJobResourceTest {
     protected static final String CALLBACK_ENDPOINT = "http://localhost:%d/callback";
-    protected static final String PROCESS_ID = "processId";
+    protected static final KogitoProcessId PROCESS_ID = new KogitoProcessId("processId");
     protected static final String PROCESS_INSTANCE_ID = "processInstanceId";
     protected static final String ROOT_PROCESS_ID = "rootProcessId";
     protected static final String ROOT_PROCESS_INSTANCE_ID = "rootProcessInstanceId";
@@ -64,6 +69,11 @@ public abstract class CommonBaseJobResourceTest {
 
     @BeforeEach
     void init() {
+        RestAssured.config = RestAssuredConfig.config().objectMapperConfig(
+                ObjectMapperConfig.objectMapperConfig().defaultObjectMapper(
+                        new Jackson2Mapper((type, charset) -> {
+                            return objectMapper;
+                        })));
         //health check - wait to be ready
         awaitReadyHealthCheck(1, MINUTES);
     }

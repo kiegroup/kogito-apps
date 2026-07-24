@@ -127,7 +127,7 @@ public class KogitoAddonRuntimeClientImplTest {
     @BeforeEach
     public void setup() {
         model = spy(new TestModel());
-        lenient().when(processes.processById(anyString())).thenReturn(process);
+        lenient().when(processes.processById(any())).thenReturn(process);
         lenient().when(process.createModel()).thenReturn(model);
         lenient().when(process.createInstance(model)).thenReturn(processInstance);
         lenient().when(process.instances()).thenReturn(instances);
@@ -186,7 +186,7 @@ public class KogitoAddonRuntimeClientImplTest {
 
         CompletableFuture<List<Timer>> result = client.getProcessInstanceTimers(SERVICE_URL, pI);
 
-        verify(processes, times(1)).processById(anyString());
+        verify(processes, times(1)).processById(any());
         verify(instances, times(1)).findById(anyString());
         verify(processInstance, times(1)).timers();
 
@@ -206,13 +206,13 @@ public class KogitoAddonRuntimeClientImplTest {
     public void testGetProcessInstanceTimersErrorWithWrongProcessId() {
         ProcessInstance pI = createProcessInstance(PROCESS_INSTANCE_ID, ACTIVE);
 
-        when(processes.processById(anyString())).thenReturn(null);
+        when(processes.processById(any())).thenReturn(null);
 
         assertThatThrownBy(() -> client.getProcessInstanceTimers(SERVICE_URL, pI))
                 .isInstanceOf(DataIndexServiceException.class)
                 .hasMessage("Cannot get timers for process instance 'pId': process with id 'travels' cannot be found");
 
-        verify(processes, times(1)).processById(anyString());
+        verify(processes, times(1)).processById(any());
         verify(instances, never()).findById(anyString());
         verify(processInstance, never()).timers();
     }
@@ -227,7 +227,7 @@ public class KogitoAddonRuntimeClientImplTest {
                 .isInstanceOf(DataIndexServiceException.class)
                 .hasMessage("Cannot get timers for process instance 'pId': instance cannot be found in process 'travels'");
 
-        verify(processes, times(1)).processById(anyString());
+        verify(processes, times(1)).processById(any());
         verify(instances, times(1)).findById(anyString());
         verify(processInstance, never()).timers();
     }
@@ -244,7 +244,7 @@ public class KogitoAddonRuntimeClientImplTest {
                 .hasRootCauseInstanceOf(RuntimeException.class)
                 .hasRootCauseMessage("Something went wrong");
 
-        verify(processes, times(1)).processById(anyString());
+        verify(processes, times(1)).processById(any());
         verify(instances, times(1)).findById(anyString());
         verify(processInstance, times(1)).timers();
     }

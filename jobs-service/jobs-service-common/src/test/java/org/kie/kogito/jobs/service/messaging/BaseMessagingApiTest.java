@@ -32,6 +32,7 @@ import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.kie.api.definition.process.KogitoProcessId;
 import org.kie.kogito.jobs.api.Job;
 import org.kie.kogito.jobs.api.URIBuilder;
 import org.kie.kogito.jobs.api.event.CancelJobRequestEvent;
@@ -59,7 +60,7 @@ public abstract class BaseMessagingApiTest {
     private static final String JOB_ID_1 = "JOB_ID_1";
     private static final String JOB_ID_2 = "JOB_ID_2";
     private static final String PROCESS_INSTANCE_ID = "PROCESS_INSTANCE_ID";
-    private static final String PROCESS_ID = "PROCESS_ID";
+    private static final KogitoProcessId PROCESS_ID = new KogitoProcessId("PROCESS_ID");
     private static final String ROOT_PROCESS_INSTANCE_ID = "ROOT_PROCESS_INSTANCE_ID";
     private static final String ROOT_PROCESS_ID = "ROOT_PROCESS_ID";
     private static final String KOGITO_ADDONS = "KOGITO_ADDONS";
@@ -114,7 +115,7 @@ public abstract class BaseMessagingApiTest {
                         REPEAT_LIMIT,
                         NODE_INSTANCE_ID_1))
                 .processInstanceId(PROCESS_INSTANCE_ID)
-                .processId(PROCESS_ID)
+                .processId(PROCESS_ID.id())
                 .rootProcessInstanceId(ROOT_PROCESS_INSTANCE_ID)
                 .rootProcessId(ROOT_PROCESS_ID)
                 .kogitoAddons(KOGITO_ADDONS)
@@ -151,7 +152,7 @@ public abstract class BaseMessagingApiTest {
                         REPEAT_LIMIT,
                         NODE_INSTANCE_ID_2))
                 .processInstanceId(PROCESS_INSTANCE_ID)
-                .processId(PROCESS_ID)
+                .processId(PROCESS_ID.id())
                 .rootProcessInstanceId(ROOT_PROCESS_INSTANCE_ID)
                 .rootProcessId(ROOT_PROCESS_ID)
                 .kogitoAddons(KOGITO_ADDONS)
@@ -243,10 +244,10 @@ public abstract class BaseMessagingApiTest {
     /**
      * Create the callback endpoint to CallbackResource.
      */
-    private static String buildCallbackEndpoint(String serviceURL, String processId, String processInstanceId, String nodeId) {
+    private static String buildCallbackEndpoint(String serviceURL, KogitoProcessId processId, String processInstanceId, String nodeId) {
         return URIBuilder.toURI(serviceURL
                 + CALLBACK_RESOURCE_PATH + "/"
-                + processId
+                + processId.id()
                 + "/instances/"
                 + processInstanceId
                 + "/timers/"

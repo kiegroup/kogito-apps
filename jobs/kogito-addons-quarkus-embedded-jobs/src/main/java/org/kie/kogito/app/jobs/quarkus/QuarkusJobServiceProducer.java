@@ -21,7 +21,6 @@ package org.kie.kogito.app.jobs.quarkus;
 import org.kie.kogito.app.jobs.api.JobExecutor;
 import org.kie.kogito.app.jobs.integrations.ProcessInstanceJobExecutor;
 import org.kie.kogito.app.jobs.integrations.ProcessJobExecutor;
-import org.kie.kogito.app.jobs.integrations.UserTaskInstanceJobExecutor;
 import org.kie.kogito.app.jobs.spi.JobContextFactory;
 import org.kie.kogito.app.jobs.spi.JobStore;
 import org.kie.kogito.app.jobs.spi.memory.MemoryJobContextFactory;
@@ -72,9 +71,6 @@ public class QuarkusJobServiceProducer {
 
     @Produces
     public JobExecutor produceUserTaskExecutor() {
-        if (userTasks.isResolvable()) {
-            return new UserTaskInstanceJobExecutor(userTasks.get(), unitOfWorkManager);
-        }
         return new QuarkusEmptyJobExecutor();
     }
 

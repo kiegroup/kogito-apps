@@ -320,7 +320,7 @@ public abstract class AbstractGraphQLSchemaManager implements GraphQLSchemaManag
         ProcessInstance pi = env.getSource();
         ProcessDefinition pd = cacheService.getProcessDefinitionStorage().get(new ProcessDefinitionKey(pi.getProcessId(), pi.getVersion()));
         if (pd == null) {
-            return dataIndexApiExecutor.getProcessDefinitionSourceFileContent(getServiceUrl(pi.getEndpoint(), pi.getProcessId()), pi.getProcessId());
+            return dataIndexApiExecutor.getProcessDefinitionSourceFileContent(getServiceUrl(pi.getEndpoint(), pi.getProcessId()), pi.getKogitoProcessId());
         } else {
             return getProcessDefinitionSource(pd);
         }
@@ -342,7 +342,7 @@ public abstract class AbstractGraphQLSchemaManager implements GraphQLSchemaManag
         ProcessInstance pi = env.getSource();
         ProcessDefinition pd = cacheService.getProcessDefinitionStorage().get(new ProcessDefinitionKey(pi.getProcessId(), pi.getVersion()));
         if (pd == null) {
-            return dataIndexApiExecutor.getProcessDefinitionNodes(getServiceUrl(pi.getEndpoint(), pi.getProcessId()), pi.getProcessId());
+            return dataIndexApiExecutor.getProcessDefinitionNodes(getServiceUrl(pi.getEndpoint(), pi.getProcessId()), pi.getKogitoProcessId());
         } else {
             return getProcessDefinitionNodes(pd);
         }
@@ -352,7 +352,7 @@ public abstract class AbstractGraphQLSchemaManager implements GraphQLSchemaManag
         if (pd == null) {
             return CompletableFuture.completedFuture(null);
         } else if (pd.getSource() == null) {
-            return dataIndexApiExecutor.getProcessDefinitionSourceFileContent(getServiceUrl(pd.getEndpoint(), pd.getId()), pd.getId());
+            return dataIndexApiExecutor.getProcessDefinitionSourceFileContent(getServiceUrl(pd.getEndpoint(), pd.getId()), pd.getKogitoProcessId());
         } else {
             return CompletableFuture.completedFuture(pd.getSource());
         }
@@ -362,7 +362,7 @@ public abstract class AbstractGraphQLSchemaManager implements GraphQLSchemaManag
         if (pd == null) {
             return CompletableFuture.completedFuture(null);
         } else if (pd.getNodes() == null || pd.getNodes().isEmpty()) {
-            return dataIndexApiExecutor.getProcessDefinitionNodes(getServiceUrl(pd.getEndpoint(), pd.getId()), pd.getId());
+            return dataIndexApiExecutor.getProcessDefinitionNodes(getServiceUrl(pd.getEndpoint(), pd.getId()), pd.getKogitoProcessId());
         } else {
             return CompletableFuture.completedFuture(pd.getNodes());
         }

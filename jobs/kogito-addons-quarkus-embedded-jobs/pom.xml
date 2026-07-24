@@ -64,7 +64,6 @@
             <groupId>org.kie</groupId>
             <artifactId>jobs-common-embedded</artifactId>
         </dependency>
-
         <!-- runtime -->
 
         <dependency>
