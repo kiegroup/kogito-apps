@@ -36,6 +36,5 @@
   <modules>
   	<module>kogito-addons-common-embedded-jobs-jpa</module>
   	<module>kogito-addons-quarkus-embedded-jobs-jpa</module>
-  	<module>kogito-addons-springboot-embedded-jobs-jpa</module>
   </modules>
 </project>

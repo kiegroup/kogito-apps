@@ -23,6 +23,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.kie.api.definition.process.KogitoProcessId;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class ProcessDefinition {
 
     private String id;
@@ -37,6 +41,15 @@ public class ProcessDefinition {
     private Set<String> annotations;
     private Map<String, Object> metadata;
     private List<Node> nodes;
+    private KogitoProcessId kogitoProcessId;
+
+    @JsonIgnore
+    public KogitoProcessId getKogitoProcessId() {
+        if (kogitoProcessId == null) {
+            kogitoProcessId = new KogitoProcessId(id, version);
+        }
+        return kogitoProcessId;
+    }
 
     public String getId() {
         return id;

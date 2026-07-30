@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.kie.api.definition.process.KogitoProcessId;
 import org.kie.kogito.index.CommonUtils;
 import org.kie.kogito.index.api.ExecuteArgs;
 import org.kie.kogito.index.api.KogitoRuntimeClient;
@@ -61,7 +62,9 @@ class KogitoRuntimeClientImpl extends KogitoRuntimeCommonClient implements Kogit
     public static final String SKIP_PROCESS_INSTANCE_PATH = "/management/processes/%s/instances/%s/skip";
     public static final String GET_PROCESS_INSTANCE_DIAGRAM_PATH = "/svg/processes/%s/instances/%s";
     public static final String GET_PROCESS_INSTANCE_SOURCE_PATH = "/management/processes/%s/source";
+    public static final String GET_PROCESS_INSTANCE_SOURCE_PATH_VERSION = "/management/processes/%s/%s/source";
     public static final String GET_PROCESS_INSTANCE_NODE_DEFINITIONS_PATH = "/management/processes/%s/nodes";
+    public static final String GET_PROCESS_INSTANCE_NODE_DEFINITIONS_VERSION_PATH = "/management/processes/%s/%s/nodes";
     public static final String GET_PROCESS_INSTANCE_TIMERS_PATH = "/management/processes/%s/instances/%s/timers";
 
     public static final String UPDATE_VARIABLES_PROCESS_INSTANCE_PATH = "/%s/%s";
@@ -154,15 +157,16 @@ class KogitoRuntimeClientImpl extends KogitoRuntimeCommonClient implements Kogit
     }
 
     @Override
-    public CompletableFuture<String> getProcessDefinitionSourceFileContent(String serviceURL, String processId) {
-        String requestURI = format(GET_PROCESS_INSTANCE_SOURCE_PATH, processId);
+    public CompletableFuture<String> getProcessDefinitionSourceFileContent(String serviceURL, KogitoProcessId processId) {
+        String requestURI = processId.version() == null ? format(GET_PROCESS_INSTANCE_SOURCE_PATH, processId) : format(GET_PROCESS_INSTANCE_SOURCE_PATH_VERSION, processId.id(), processId.version());
         return sendGetClientRequest(getWebClient(serviceURL), requestURI, "Get Process Instance source file with processId: " +
                 processId, null);
     }
 
     @Override
-    public CompletableFuture<List<Node>> getProcessDefinitionNodes(String serviceURL, String processId) {
-        String requestURI = format(GET_PROCESS_INSTANCE_NODE_DEFINITIONS_PATH, processId);
+    public CompletableFuture<List<Node>> getProcessDefinitionNodes(String serviceURL, KogitoProcessId processId) {
+        String requestURI = processId.version() == null ? format(GET_PROCESS_INSTANCE_NODE_DEFINITIONS_PATH, processId.id())
+                : format(GET_PROCESS_INSTANCE_NODE_DEFINITIONS_VERSION_PATH, processId.id(), processId.version());
         return sendGetClientRequest(getWebClient(serviceURL), requestURI, "Get Process available nodes with id: " + processId, List.class);
     }
 

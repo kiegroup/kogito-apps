@@ -27,7 +27,6 @@ import java.util.Optional;
 import org.kie.kogito.jobs.JobDescription;
 import org.kie.kogito.jobs.descriptors.ProcessInstanceJobDescription;
 import org.kie.kogito.jobs.descriptors.ProcessJobDescription;
-import org.kie.kogito.jobs.descriptors.UserTaskInstanceJobDescription;
 import org.kie.kogito.jobs.service.api.Recipient;
 import org.kie.kogito.jobs.service.model.JobDetails;
 import org.kie.kogito.jobs.service.model.JobStatus;
@@ -60,11 +59,9 @@ public final class JobDetailsHelper {
 
         String correlationId = null;
         if (jobDescription instanceof ProcessJobDescription processJobDescription) {
-            correlationId = processJobDescription.processId();
+            correlationId = processJobDescription.processId().id();
         } else if (jobDescription instanceof ProcessInstanceJobDescription processInstanceJobDescription) {
             correlationId = processInstanceJobDescription.processInstanceId();
-        } else if (jobDescription instanceof UserTaskInstanceJobDescription userTaskInstanceJobDescription) {
-            correlationId = userTaskInstanceJobDescription.id();
         }
 
         return JobDetails.builder().id(jobDescription.id())

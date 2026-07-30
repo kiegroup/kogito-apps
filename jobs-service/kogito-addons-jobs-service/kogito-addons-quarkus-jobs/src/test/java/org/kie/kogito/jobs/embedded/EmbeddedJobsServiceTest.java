@@ -25,6 +25,7 @@ import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.kie.api.definition.process.KogitoProcessId;
 import org.kie.kogito.event.DataEvent;
 import org.kie.kogito.event.job.JobInstanceDataEvent;
 import org.kie.kogito.jobs.DurationExpirationTime;
@@ -40,7 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @QuarkusTest
 public class EmbeddedJobsServiceTest {
 
-    private static final String PROCESS_ID = "processId";
+    private static final KogitoProcessId PROCESS_ID = new KogitoProcessId("processId");
     private static final String PROCESS_INSTANCE_ID = "1";
     private static final String NODE_INSTANCE_ID = "node_1";
     private static final String ROOT_PROCESS_ID = "rootProcess";
@@ -100,7 +101,7 @@ public class EmbeddedJobsServiceTest {
         events.forEach(event -> {
             assertThat(event)
                     .isInstanceOf(JobInstanceDataEvent.class)
-                    .hasFieldOrPropertyWithValue("kogitoProcessId", PROCESS_ID)
+                    .hasFieldOrPropertyWithValue("kogitoProcessId", PROCESS_ID.id())
                     .hasFieldOrPropertyWithValue("kogitoProcessInstanceId", PROCESS_INSTANCE_ID)
                     .satisfiesAnyOf(noRootProcess, withRootProcess);
         });

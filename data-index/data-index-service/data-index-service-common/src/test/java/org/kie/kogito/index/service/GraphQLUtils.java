@@ -277,7 +277,7 @@ public class GraphQLUtils {
     }
 
     private static Stream<Field> getAllFieldsList(Class clazz) {
-        return FieldUtils.getAllFieldsList(clazz).stream().filter(getSourcePredicate().or(getSourcePredicate()));
+        return FieldUtils.getAllFieldsList(clazz).stream().filter(GraphQLUtils::getSourcePredicate);
     }
 
     private static Function<Field, String> getFieldName() {
@@ -311,7 +311,7 @@ public class GraphQLUtils {
         return field -> !field.getName().equals("$jacocoData");
     }
 
-    private static Predicate<Field> getSourcePredicate() {
-        return field -> !(field.getDeclaringClass().equals(ProcessDefinition.class) && (field.getName().equals("source") || field.getName().equals("nodes")));
+    private static boolean getSourcePredicate(Field field) {
+        return !field.getName().equals("kogitoProcessId") && !(field.getDeclaringClass().equals(ProcessDefinition.class) && (field.getName().equals("source") || field.getName().equals("nodes")));
     }
 }

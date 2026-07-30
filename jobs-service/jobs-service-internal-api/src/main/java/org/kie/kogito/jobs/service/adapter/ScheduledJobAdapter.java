@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.kie.api.definition.process.KogitoProcessId;
 import org.kie.kogito.jobs.api.JobBuilder;
 import org.kie.kogito.jobs.service.api.recipient.http.HttpRecipient;
 import org.kie.kogito.jobs.service.model.*;
@@ -60,7 +61,8 @@ public class ScheduledJobAdapter {
                     String processId = httpRecipient.getHeader("processId");
                     String rootProcessId = httpRecipient.getHeader("rootProcessId");
                     String nodeInstanceId = httpRecipient.getHeader("nodeInstanceId");
-                    return new ProcessPayload(processInstanceId, rootProcessInstanceId, processId, rootProcessId, nodeInstanceId);
+                    String version = httpRecipient.getHeader("processVersion");
+                    return new ProcessPayload(processInstanceId, rootProcessInstanceId, processId == null ? null : new KogitoProcessId(processId, version), rootProcessId, nodeInstanceId);
                 })
                 .filter(processPayload -> Objects.nonNull(processPayload.processInstanceId))//just to guarantee headers were present
                 .orElse(new ProcessPayload());
@@ -118,7 +120,8 @@ public class ScheduledJobAdapter {
                 .map(url -> new RecipientInstance(HttpRecipient.builder()
                         .forStringPayload()
                         .url(url)
-                        .header("processId", scheduledJob.getProcessId())
+                        .header("processId", scheduledJob.getProcessId() != null ? scheduledJob.getProcessId().id() : null)
+                        .header("processVersion", scheduledJob.getProcessId() != null ? scheduledJob.getProcessId().version() : null)
                         .header("processInstanceId", scheduledJob.getProcessInstanceId())
                         .header("rootProcessInstanceId", scheduledJob.getRootProcessInstanceId())
                         .header("rootProcessId", scheduledJob.getRootProcessId())
@@ -174,7 +177,7 @@ public class ScheduledJobAdapter {
     public final static class ProcessPayload {
         private String processInstanceId;
         private String rootProcessInstanceId;
-        private String processId;
+        private KogitoProcessId processId;
         private String rootProcessId;
         private String nodeInstanceId;
 
@@ -182,7 +185,7 @@ public class ScheduledJobAdapter {
             //needed by jackson
         }
 
-        public ProcessPayload(String processInstanceId, String rootProcessInstanceId, String processId,
+        public ProcessPayload(String processInstanceId, String rootProcessInstanceId, KogitoProcessId processId,
                 String rootProcessId, String nodeInstanceId) {
             this.processInstanceId = processInstanceId;
             this.rootProcessInstanceId = rootProcessInstanceId;
@@ -199,7 +202,7 @@ public class ScheduledJobAdapter {
             return rootProcessInstanceId;
         }
 
-        public String getProcessId() {
+        public KogitoProcessId getProcessId() {
             return processId;
         }
 

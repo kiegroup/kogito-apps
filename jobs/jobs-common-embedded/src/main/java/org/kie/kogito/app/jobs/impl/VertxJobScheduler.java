@@ -43,7 +43,6 @@ import org.kie.kogito.app.jobs.api.JobTimeoutInterceptor;
 import org.kie.kogito.app.jobs.integrations.JobExceptionDetailsExtractor;
 import org.kie.kogito.app.jobs.integrations.ProcessInstanceJobDescriptionMerger;
 import org.kie.kogito.app.jobs.integrations.ProcessJobDescriptionMerger;
-import org.kie.kogito.app.jobs.integrations.UserTaskInstanceJobDescriptorMerger;
 import org.kie.kogito.app.jobs.spi.JobContext;
 import org.kie.kogito.app.jobs.spi.JobContextFactory;
 import org.kie.kogito.app.jobs.spi.JobStore;
@@ -226,7 +225,6 @@ public class VertxJobScheduler implements JobScheduler, Handler<Long> {
         this.jobSchedulerListeners = new ArrayList<>();
         this.interceptors = new ArrayList<>();
         this.jobDescriptionMergers = new ArrayList<>();
-        this.jobDescriptionMergers.add(new UserTaskInstanceJobDescriptorMerger());
         this.jobDescriptionMergers.add(new ProcessInstanceJobDescriptionMerger());
         this.jobDescriptionMergers.add(new ProcessJobDescriptionMerger());
 

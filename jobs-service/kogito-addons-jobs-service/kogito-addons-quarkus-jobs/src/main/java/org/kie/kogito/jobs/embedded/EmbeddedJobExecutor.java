@@ -25,7 +25,6 @@ import org.kie.kogito.Application;
 import org.kie.kogito.Model;
 import org.kie.kogito.jobs.JobDescription;
 import org.kie.kogito.jobs.descriptors.ProcessInstanceJobDescription;
-import org.kie.kogito.jobs.descriptors.UserTaskInstanceJobDescription;
 import org.kie.kogito.jobs.service.api.Recipient;
 import org.kie.kogito.jobs.service.exception.JobExecutionException;
 import org.kie.kogito.jobs.service.executor.JobExecutor;
@@ -35,7 +34,6 @@ import org.kie.kogito.jobs.service.model.RecipientInstance;
 import org.kie.kogito.process.Process;
 import org.kie.kogito.process.Processes;
 import org.kie.kogito.services.jobs.impl.TriggerJobCommand;
-import org.kie.kogito.usertask.UserTaskInstance;
 import org.kie.kogito.usertask.UserTasks;
 
 import io.smallrye.mutiny.Uni;
@@ -67,8 +65,6 @@ public class EmbeddedJobExecutor implements JobExecutor {
         JobDescription jobDescription = recipient.getPayload().getData();
         if (jobDescription instanceof ProcessInstanceJobDescription processInstanceJobDescription && processes.isResolvable()) {
             return processJobDescription(jobDetails, processInstanceJobDescription);
-        } else if (jobDescription instanceof UserTaskInstanceJobDescription userTaskInstanceJobDescription && userTasks.isResolvable()) {
-            return processJobDescription(jobDetails, userTaskInstanceJobDescription);
         }
 
         return Uni.createFrom().item(
@@ -78,32 +74,6 @@ public class EmbeddedJobExecutor implements JobExecutor {
                         .now()
                         .message("job cannot be processed")
                         .build());
-    }
-
-    private Uni<JobExecutionResponse> processJobDescription(JobDetails jobDetails, UserTaskInstanceJobDescription userTaskInstanceJobDescription) {
-        Supplier<Void> execute = () -> executeInUnitOfWork(application.unitOfWorkManager(), () -> {
-            Optional<UserTaskInstance> userTaskInstance = userTasks.get().instances().findById(userTaskInstanceJobDescription.userTaskInstanceId());
-            if (userTaskInstance.isEmpty()) {
-                return null;
-            }
-            UserTaskInstance instance = userTaskInstance.get();
-            instance.trigger(userTaskInstanceJobDescription);
-            return null;
-        });
-
-        return Uni.createFrom().item(execute)
-                .onFailure()
-                .transform(
-                        unexpected -> new JobExecutionException(jobDetails.getId(), "Unexpected error when executing Embedded request for job: " + jobDetails.getId() + ". " + unexpected.getMessage(),
-                                unexpected))
-                .onItem()
-                .transform(res -> JobExecutionResponse.builder()
-                        .message("Embedded job executed")
-                        .code(String.valueOf(200))
-                        .now()
-                        .jobId(jobDetails.getId())
-                        .build());
-
     }
 
     private Uni<JobExecutionResponse> processJobDescription(JobDetails jobDetails, ProcessInstanceJobDescription processInstanceJobDescription) {

@@ -31,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.kie.kogito.jobs.api.Job;
 import org.kie.kogito.jobs.api.event.CancelJobRequestEvent;
 import org.kie.kogito.jobs.api.event.CreateProcessInstanceJobRequestEvent;
+import org.kie.kogito.jobs.api.event.serialization.JobJacksonModule;
 import org.kie.kogito.jobs.service.exception.JobServiceException;
 import org.kie.kogito.jobs.service.model.JobDetails;
 import org.kie.kogito.jobs.service.model.JobStatus;
@@ -87,7 +88,8 @@ public abstract class ReactiveMessagingEventConsumerTest<T extends ReactiveMessa
         objectMapper = new ObjectMapper()
                 .registerModule(new JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .registerModule(JsonFormat.getCloudEventJacksonModule());
+                .registerModule(JsonFormat.getCloudEventJacksonModule())
+                .registerModule(new JobJacksonModule());
         CompletionStage<Void> ackCompletionState = CompletableFuture.completedFuture(null);
         lenient().doReturn(ackCompletionState).when(message).ack();
         CompletionStage<Void> nackCompletionStage = CompletableFuture.completedFuture(null);

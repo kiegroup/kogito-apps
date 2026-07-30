@@ -37,10 +37,13 @@ public class JobDataEvent extends AbstractDataEvent<ScheduledJob> {
                 data,
                 data.getProcessInstanceId(),
                 data.getRootProcessInstanceId(),
-                data.getProcessId(),
+                data.getProcessId() != null ? data.getProcessId().id() : null,
                 data.getRootProcessId(),
                 null,
                 identity);
+        if (data.getProcessId() != null && data.getProcessId().getVersion() != null) {
+            setKogitoProcessInstanceVersion(data.getProcessId().version());
+        }
     }
 
     @JsonIgnore
