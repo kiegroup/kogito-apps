@@ -26,7 +26,6 @@ import java.nio.file.Paths;
 import java.time.Duration;
 
 import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -56,8 +55,6 @@ public abstract class AbstractProcessDataIndexIT {
     }
 
     RequestSpecification spec;
-
-    ObjectMapper mapper = new ObjectMapper();
 
     public abstract String getDataIndexURL();
 
