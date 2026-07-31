@@ -55,8 +55,6 @@ import static org.kie.kogito.index.json.JsonUtils.getObjectMapper;
 public class GraphQLSchemaManagerImpl extends AbstractGraphQLSchemaManager {
     private static final String PROCESS_INSTANCE_ADDED = "ProcessInstanceAdded";
     private static final String PROCESS_INSTANCE_UPDATED = "ProcessInstanceUpdated";
-    private static final String USER_TASK_INSTANCE_ADDED = "UserTaskInstanceAdded";
-    private static final String USER_TASK_INSTANCE_UPDATED = "UserTaskInstanceUpdated";
     private static final String JOB_UPDATED = "JobUpdated";
     private static final String JOB_ADDED = "JobAdded";
 
@@ -95,7 +93,6 @@ public class GraphQLSchemaManagerImpl extends AbstractGraphQLSchemaManager {
                 .type("Query", builder -> {
                     builder.dataFetcher("ProcessDefinitions", this::getProcessDefinitionsValues);
                     builder.dataFetcher("ProcessInstances", this::getProcessInstancesValues);
-                    builder.dataFetcher("UserTaskInstances", this::getUserTaskInstancesValues);
                     builder.dataFetcher("Jobs", this::getJobsValues);
                     addCountQueries(builder);
                     return builder;
@@ -112,13 +109,6 @@ public class GraphQLSchemaManagerImpl extends AbstractGraphQLSchemaManager {
                     builder.dataFetcher("JobReschedule", this::rescheduleJob);
                     builder.dataFetcher("NodeInstanceRescheduleSlaTimer", this::rescheduleNodeInstanceSla);
                     builder.dataFetcher("ProcessInstanceRescheduleSlaTimer", this::rescheduleProcessInstanceSla);
-                    builder.dataFetcher("UserTaskInstanceUpdate", this::updateUserTaskInstance);
-                    builder.dataFetcher("UserTaskInstanceCommentCreate", this::createTaskInstanceComment);
-                    builder.dataFetcher("UserTaskInstanceAttachmentCreate", this::createTaskInstanceAttachment);
-                    builder.dataFetcher("UserTaskInstanceCommentUpdate", this::updateUserTaskComment);
-                    builder.dataFetcher("UserTaskInstanceCommentDelete", this::deleteUserTaskComment);
-                    builder.dataFetcher("UserTaskInstanceAttachmentUpdate", this::updateUserTaskAttachment);
-                    builder.dataFetcher("UserTaskInstanceAttachmentDelete", this::deleteUserTaskAttachment);
                     loadAdditionalMutations(builder);
                     return builder;
                 })
@@ -140,10 +130,6 @@ public class GraphQLSchemaManagerImpl extends AbstractGraphQLSchemaManager {
                     builder.dataFetcher("executionSummary", this::getExecutionSummary);
                     return builder;
                 })
-                .type("UserTaskInstance", builder -> {
-                    builder.dataFetcher("schema", this::getUserTaskInstanceSchema);
-                    return builder;
-                })
                 .type("ProcessInstanceMeta", builder -> {
                     builder.dataFetcher("serviceUrl", this::getProcessInstanceJsonServiceUrl);
                     return builder;
@@ -155,8 +141,6 @@ public class GraphQLSchemaManagerImpl extends AbstractGraphQLSchemaManager {
                 .type("Subscription", builder -> {
                     builder.dataFetcher(PROCESS_INSTANCE_ADDED, getProcessInstanceAddedDataFetcher());
                     builder.dataFetcher(PROCESS_INSTANCE_UPDATED, getProcessInstanceUpdatedDataFetcher());
-                    builder.dataFetcher(USER_TASK_INSTANCE_ADDED, getUserTaskInstanceAddedDataFetcher());
-                    builder.dataFetcher(USER_TASK_INSTANCE_UPDATED, getUserTaskInstanceUpdatedDataFetcher());
                     builder.dataFetcher(JOB_ADDED, getJobAddedDataFetcher());
                     builder.dataFetcher(JOB_UPDATED, getJobUpdatedDataFetcher());
                     return builder;
@@ -187,14 +171,6 @@ public class GraphQLSchemaManagerImpl extends AbstractGraphQLSchemaManager {
 
     private DataFetcher<Publisher<ObjectNode>> getProcessInstanceUpdatedDataFetcher() {
         return objectUpdatedPublisher(() -> getCacheService().getProcessInstanceStorage());
-    }
-
-    private DataFetcher<Publisher<ObjectNode>> getUserTaskInstanceAddedDataFetcher() {
-        return objectCreatedPublisher(() -> getCacheService().getUserTaskInstanceStorage());
-    }
-
-    private DataFetcher<Publisher<ObjectNode>> getUserTaskInstanceUpdatedDataFetcher() {
-        return objectUpdatedPublisher(() -> getCacheService().getUserTaskInstanceStorage());
     }
 
     private DataFetcher<Publisher<ObjectNode>> getJobUpdatedDataFetcher() {

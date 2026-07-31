@@ -25,7 +25,6 @@ import org.kie.kogito.index.model.ProcessDefinitionKey;
 import org.kie.kogito.index.storage.DataIndexStorageService;
 import org.kie.kogito.index.storage.JobInstanceStorage;
 import org.kie.kogito.index.storage.ProcessInstanceStorage;
-import org.kie.kogito.index.storage.UserTaskInstanceStorage;
 import org.kie.kogito.persistence.api.Storage;
 import org.kie.kogito.persistence.api.StorageServiceCapability;
 
@@ -39,17 +38,13 @@ public class JPADataIndexStorageService implements DataIndexStorageService {
 
     ProcessInstanceStorage processInstanceStorage;
 
-    UserTaskInstanceStorage userTaskInstanceStorage;
-
     public JPADataIndexStorageService() {
     }
 
-    public JPADataIndexStorageService(ProcessDefinitionEntityStorage definitionStorage, JobEntityStorage jobsStorage, ProcessInstanceStorage processInstanceStorage,
-            UserTaskInstanceStorage userTaskInstanceStorage) {
+    public JPADataIndexStorageService(ProcessDefinitionEntityStorage definitionStorage, JobEntityStorage jobsStorage, ProcessInstanceStorage processInstanceStorage) {
         this.definitionStorage = definitionStorage;
         this.jobsStorage = jobsStorage;
         this.processInstanceStorage = processInstanceStorage;
-        this.userTaskInstanceStorage = userTaskInstanceStorage;
     }
 
     @Override
@@ -60,11 +55,6 @@ public class JPADataIndexStorageService implements DataIndexStorageService {
     @Override
     public ProcessInstanceStorage getProcessInstanceStorage() {
         return processInstanceStorage;
-    }
-
-    @Override
-    public UserTaskInstanceStorage getUserTaskInstanceStorage() {
-        return userTaskInstanceStorage;
     }
 
     @Override

@@ -28,7 +28,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
 import org.kie.kogito.index.model.ProcessInstanceState;
 import org.kie.kogito.index.storage.DataIndexStorageService;
@@ -59,7 +58,6 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.hamcrest.CoreMatchers.isA;
 import static org.kie.kogito.index.test.TestUtils.getJobCloudEvent;
 import static org.kie.kogito.index.test.TestUtils.getProcessCloudEvent;
-import static org.kie.kogito.index.test.TestUtils.getUserTaskCloudEvent;
 
 public abstract class AbstractWebSocketSubscriptionIT {
 
@@ -87,7 +85,6 @@ public abstract class AbstractWebSocketSubscriptionIT {
         cacheService.getJobsStorage().clear();
         cacheService.getProcessDefinitionStorage().clear();
         cacheService.getProcessInstanceStorage().clear();
-        cacheService.getUserTaskInstanceStorage().clear();
         if (cacheService.getDomainModelCache("travels") != null) {
             cacheService.getDomainModelCache("travels").clear();
         }
@@ -105,20 +102,6 @@ public abstract class AbstractWebSocketSubscriptionIT {
 
         assertProcessInstanceSubscription(processId, processInstanceId, ProcessInstanceState.ACTIVE, "subscription { ProcessInstanceAdded { id, processId, state } }", "ProcessInstanceAdded");
         assertProcessInstanceSubscription(processId, processInstanceId, ProcessInstanceState.COMPLETED, "subscription { ProcessInstanceUpdated { id, processId, state } }", "ProcessInstanceUpdated");
-    }
-
-    @Test
-    void testUserTaskInstanceSubscription() throws Exception {
-        String taskId = UUID.randomUUID().toString();
-        String processId = "deals";
-        String processInstanceId = UUID.randomUUID().toString();
-
-        protobufService.registerProtoBufferType(getUserTaskProtobufFileContent());
-
-        assertUserTaskInstanceSubscription(taskId, processId, processInstanceId, "InProgress", "subscription { UserTaskInstanceAdded { id, processInstanceId, processId, state } }",
-                "UserTaskInstanceAdded");
-        assertUserTaskInstanceSubscription(taskId, processId, processInstanceId, "Completed", "subscription { UserTaskInstanceUpdated { id, processInstanceId, processId, state } }",
-                "UserTaskInstanceUpdated");
     }
 
     @Test
@@ -181,26 +164,6 @@ public abstract class AbstractWebSocketSubscriptionIT {
                 a -> a.node("payload.data." + subscriptionName + ".id").isEqualTo(processInstanceId),
                 a -> a.node("payload.data." + subscriptionName + ".processId").isEqualTo(processId),
                 a -> a.node("payload.data." + subscriptionName + ".state").isEqualTo(state.name()));
-    }
-
-    private void assertUserTaskInstanceSubscription(String taskId, String processId, String processInstanceId, String state, String subscription, String subscriptionName) throws Exception {
-        CompletableFuture<JsonObject> cf = subscribe(subscription);
-
-        given().contentType(ContentType.JSON).body("{ \"query\" : \"{ Deals{ id } }\" }")
-                .when().post("/graphql")
-                .then().log().ifValidationFails().statusCode(200).body("data.Deals", isA(Collection.class));
-
-        UserTaskInstanceDataEvent<?> event = getUserTaskCloudEvent(taskId, processId, processInstanceId, null, null, state);
-        indexUserTaskCloudEvent(event);
-
-        JsonObject json = cf.get(1, TimeUnit.MINUTES);
-
-        assertThatJson(json.toString()).and(
-                a -> a.node("type").isEqualTo("data"),
-                a -> a.node("payload.data." + subscriptionName + ".id").isEqualTo(taskId),
-                a -> a.node("payload.data." + subscriptionName + ".processInstanceId").isEqualTo(processInstanceId),
-                a -> a.node("payload.data." + subscriptionName + ".processId").isEqualTo(processId),
-                a -> a.node("payload.data." + subscriptionName + ".state").isEqualTo(state));
     }
 
     private void assertJobSubscription(String taskId, String processId, String processInstanceId, String status, String subscription, String subscriptionName) throws Exception {
@@ -267,12 +230,8 @@ public abstract class AbstractWebSocketSubscriptionIT {
 
     protected abstract void indexProcessCloudEvent(ProcessInstanceDataEvent<?> event);
 
-    protected abstract void indexUserTaskCloudEvent(UserTaskInstanceDataEvent<?> event);
-
     protected abstract void indexJobCloudEvent(KogitoJobCloudEvent event);
 
     protected abstract String getProcessProtobufFileContent() throws Exception;
-
-    protected abstract String getUserTaskProtobufFileContent() throws Exception;
 
 }

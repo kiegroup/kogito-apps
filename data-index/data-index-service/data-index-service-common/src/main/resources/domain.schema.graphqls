@@ -5,7 +5,6 @@ extend schema {
 type KogitoMetadata {
     lastUpdate: DateTime!
     processInstances: [ProcessInstanceMeta]
-    userTasks: [UserTaskInstanceMeta]
 }
 
 input KogitoMetadataOrderBy {
@@ -15,7 +14,6 @@ input KogitoMetadataOrderBy {
 input KogitoMetadataArgument {
     lastUpdate: DateArgument
     processInstances: ProcessInstanceMetaArgument
-    userTasks: UserTaskInstanceMetaArgument
 }
 
 type ProcessInstanceMeta {
@@ -55,54 +53,11 @@ input ProcessInstanceMetaArgument {
     updatedBy: StringArgument
 }
 
-extend type UserTaskInstance {
-    schema(user: String, groups:[String]): String
-}
 
-type UserTaskInstanceMeta {
-    id: String!
-    description: String
-    name: String
-    priority: String
-    processInstanceId: String!
-    state: String!
-    actualOwner: String
-    adminGroups: [String!]
-    adminUsers: [String!]
-    completed: DateTime
-    started: DateTime!
-    excludedUsers: [String!]
-    potentialGroups: [String!]
-    potentialUsers: [String!]
-    referenceName: String
-    lastUpdate: DateTime!
-    comments: [Comment!]
-    attachments: [Attachment!]
-}
-
-input UserTaskInstanceMetaArgument {
-    state: StringArgument
-    id: IdArgument
-    description: StringArgument
-    name: StringArgument
-    priority: StringArgument
-    processInstanceId: IdArgument
-    actualOwner: StringArgument
-    potentialUsers: StringArrayArgument
-    potentialGroups: StringArrayArgument
-    excludedUsers: StringArrayArgument
-    adminGroups: StringArrayArgument
-    adminUsers: StringArrayArgument
-    completed: DateArgument
-    started: DateArgument
-    referenceName: StringArgument
-}
 
 type Subscription {
     ProcessInstanceAdded: ProcessInstance!
     ProcessInstanceUpdated: ProcessInstance!
-    UserTaskInstanceAdded: UserTaskInstance!
-    UserTaskInstanceUpdated: UserTaskInstance!
     JobAdded: Job!
     JobUpdated: Job!
 }

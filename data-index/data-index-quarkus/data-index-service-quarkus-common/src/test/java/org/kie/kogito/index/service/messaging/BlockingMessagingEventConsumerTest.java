@@ -32,8 +32,6 @@ import org.kie.kogito.event.process.KogitoMarshallEventSupport;
 import org.kie.kogito.event.process.MultipleProcessInstanceDataEvent;
 import org.kie.kogito.event.process.ProcessDefinitionDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
-import org.kie.kogito.event.usertask.MultipleUserTaskInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
 import org.kie.kogito.index.model.Job;
 import org.kie.kogito.index.service.IndexingService;
@@ -81,22 +79,6 @@ class BlockingMessagingEventConsumerTest {
 
         // Assert
         verify(indexingService, times(1)).indexProcessInstanceEvent(event);
-        verify(eventPublisher, times(1)).fire(event);
-    }
-
-    @Test
-    void testOnUserTaskInstanceEvent() {
-        // Arrange
-        UserTaskInstanceDataEvent<?> event1 = mock(UserTaskInstanceDataEvent.class);
-        UserTaskInstanceDataEvent<?> event2 = mock(UserTaskInstanceDataEvent.class);
-        Collection<UserTaskInstanceDataEvent<?>> events = Arrays.asList(event1, event2);
-        MultipleUserTaskInstanceDataEvent event = new MultipleUserTaskInstanceDataEvent(URI.create("dummy"), events);
-
-        // Act
-        consumer.onUserTaskInstanceEvent(event);
-
-        // Assert
-        verify(indexingService, times(1)).indexUserTaskInstanceEvent(event);
         verify(eventPublisher, times(1)).fire(event);
     }
 
@@ -184,21 +166,6 @@ class BlockingMessagingEventConsumerTest {
 
         // Assert
         verify(eventPublisher, never()).fire(event); // Event should not be published if indexing fails
-    }
-
-    @Test
-    void testErrorHanlingInOnUserTaskInstanceEvent() {
-        // Arrange
-        UserTaskInstanceDataEvent<?> event = mock(UserTaskInstanceDataEvent.class);
-        Collection<UserTaskInstanceDataEvent<?>> events = Arrays.asList(event);
-        doThrow(new RuntimeException("On purpose! Indexing failed")).when(indexingService).indexUserTaskInstanceEvent(event);
-
-        // Act
-        consumer.onUserTaskInstanceEvent(new MultipleUserTaskInstanceDataEvent(URI.create("dummy"), events));
-
-        // Assert
-        verify(eventPublisher, never()).fire(event); // Event should not be published if indexing fails
-
     }
 
     @Test

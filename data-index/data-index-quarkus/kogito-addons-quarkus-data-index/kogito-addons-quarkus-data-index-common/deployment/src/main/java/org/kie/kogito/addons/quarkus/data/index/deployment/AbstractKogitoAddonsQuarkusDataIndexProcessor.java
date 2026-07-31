@@ -25,7 +25,6 @@ import org.kie.kogito.index.addon.vertx.VertxGraphiQLSetup;
 import org.kie.kogito.index.model.Node;
 import org.kie.kogito.index.model.ProcessDefinition;
 import org.kie.kogito.index.model.ProcessInstance;
-import org.kie.kogito.index.model.UserTaskInstance;
 import org.kie.kogito.quarkus.addons.common.deployment.KogitoCapability;
 import org.kie.kogito.quarkus.addons.common.deployment.OneOfCapabilityKogitoAddOnProcessor;
 
@@ -80,7 +79,6 @@ public abstract class AbstractKogitoAddonsQuarkusDataIndexProcessor extends OneO
         reflectiveHierarchy(Node.class, reflectiveHierarchyClass);
         reflectiveHierarchy(ProcessDefinition.class, reflectiveHierarchyClass);
         reflectiveHierarchy(ProcessInstance.class, reflectiveHierarchyClass);
-        reflectiveHierarchy(UserTaskInstance.class, reflectiveHierarchyClass);
     }
 
     protected void reflectiveHierarchy(Class<?> clazz, BuildProducer<ReflectiveHierarchyBuildItem> reflectiveHierarchyClass) {

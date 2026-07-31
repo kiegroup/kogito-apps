@@ -29,9 +29,6 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceStateDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceStateEventBody;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceStateDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceStateEventBody;
 import org.kie.kogito.index.json.JsonUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,17 +51,6 @@ public class DataEventDeserializerTest {
         String jsonValue = mapper.writeValueAsString(dataEvent);
         ProcessInstanceDataEvent<?> readDataEvent = mapper.readValue(jsonValue.getBytes(), ProcessInstanceDataEvent.class);
         Assertions.assertEquals(readDataEvent, dataEvent);
-
-    }
-
-    @Test
-    public void testUserTaskInstanceDataEvent() throws IOException {
-        UserTaskInstanceStateDataEvent dataEvent = new UserTaskInstanceStateDataEvent("source", "addons", "identity", new HashMap<>(), new UserTaskInstanceStateEventBody());
-
-        String jsonValue = mapper.writeValueAsString(dataEvent);
-        UserTaskInstanceDataEvent<?> readDataEvent = mapper.readValue(jsonValue.getBytes(), UserTaskInstanceDataEvent.class);
-        Assertions.assertEquals(readDataEvent, dataEvent);
-
     }
 
 }

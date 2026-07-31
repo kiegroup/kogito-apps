@@ -18,7 +18,6 @@
  */
 package org.kie.kogito.index.test;
 
-import java.net.URI;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -27,9 +26,6 @@ import java.util.*;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.kie.kogito.event.process.*;
-import org.kie.kogito.event.usertask.*;
-import org.kie.kogito.index.model.Attachment;
-import org.kie.kogito.index.model.Comment;
 import org.kie.kogito.index.model.Job;
 import org.kie.kogito.index.model.Milestone;
 import org.kie.kogito.index.model.MilestoneStatus;
@@ -38,7 +34,6 @@ import org.kie.kogito.index.model.ProcessDefinition;
 import org.kie.kogito.index.model.ProcessInstance;
 import org.kie.kogito.index.model.ProcessInstanceError;
 import org.kie.kogito.index.model.ProcessInstanceState;
-import org.kie.kogito.index.model.UserTaskInstance;
 import org.kie.kogito.jackson.utils.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -136,96 +131,6 @@ public class TestUtils {
 
         ProcessInstanceErrorDataEvent event = new ProcessInstanceErrorDataEvent();
         event.setKogitoProcessInstanceId(processInstance);
-        event.setKogitoProcessId(processId);
-        event.setData(body);
-        return event;
-    }
-
-    public static UserTaskInstanceStateDataEvent createUserTaskStateEvent(String taskId, String taskName, String processInstanceId, String processId, String state) {
-        UserTaskInstanceStateEventBody body = UserTaskInstanceStateEventBody.create()
-                .userTaskInstanceId(taskId)
-                .userTaskName(taskName)
-                .state(state)
-                .processInstanceId(processInstanceId)
-                .build();
-
-        UserTaskInstanceStateDataEvent event = new UserTaskInstanceStateDataEvent();
-
-        event.setKogitoUserTaskInstanceId(taskId);
-        event.setKogitoProcessInstanceId(processInstanceId);
-        event.setKogitoProcessId(processId);
-
-        event.setData(body);
-
-        return event;
-    }
-
-    public static UserTaskInstanceCommentDataEvent createUserTaskCommentEvent(String taskId, String processInstanceId, String processId, String commentId, String comment, String userId,
-            int eventType) {
-
-        UserTaskInstanceCommentEventBody body = UserTaskInstanceCommentEventBody.create()
-                .commentId(commentId)
-                .eventUser(userId)
-                .commentContent(comment)
-                .eventDate(new Date())
-                .eventType(eventType)
-                .userTaskInstanceId(taskId)
-                .build();
-
-        UserTaskInstanceCommentDataEvent event = new UserTaskInstanceCommentDataEvent();
-        event.setKogitoUserTaskInstanceId(taskId);
-        event.setKogitoProcessInstanceId(processInstanceId);
-        event.setKogitoProcessId(processId);
-        event.setData(body);
-        return event;
-    }
-
-    public static UserTaskInstanceAttachmentDataEvent createUserTaskAttachmentEvent(String taskId, String processInstanceId, String processId, String attachmentId, String attachmentName,
-            URI attachmentURI, String userId, int eventType) {
-
-        UserTaskInstanceAttachmentEventBody body = UserTaskInstanceAttachmentEventBody.create()
-                .attachmentId(attachmentId)
-                .eventUser(userId)
-                .attachmentName(attachmentName)
-                .attachmentURI(attachmentURI)
-                .eventDate(new Date())
-                .eventType(eventType)
-                .userTaskInstanceId(taskId)
-                .build();
-
-        UserTaskInstanceAttachmentDataEvent event = new UserTaskInstanceAttachmentDataEvent();
-        event.setKogitoUserTaskInstanceId(taskId);
-        event.setKogitoProcessInstanceId(processInstanceId);
-        event.setKogitoProcessId(processId);
-        event.setData(body);
-        return event;
-    }
-
-    public static UserTaskInstanceAssignmentDataEvent createUserTaskAssignmentEvent(String taskId, String processInstanceId, String processId, String assignmentType, String... users) {
-        UserTaskInstanceAssignmentEventBody body = UserTaskInstanceAssignmentEventBody.create()
-                .users(users)
-                .assignmentType(assignmentType)
-                .build();
-
-        UserTaskInstanceAssignmentDataEvent event = new UserTaskInstanceAssignmentDataEvent();
-        event.setKogitoUserTaskInstanceId(taskId);
-        event.setKogitoProcessInstanceId(processInstanceId);
-        event.setKogitoProcessId(processId);
-        event.setData(body);
-        return event;
-    }
-
-    public static UserTaskInstanceVariableDataEvent createUserTaskVariableEvent(String taskId, String processInstanceId, String processId, String variableName, Object variableValue,
-            String variableType) {
-        UserTaskInstanceVariableEventBody body = UserTaskInstanceVariableEventBody.create()
-                .variableName(variableName)
-                .variableValue(variableValue)
-                .variableType(variableType)
-                .build();
-
-        UserTaskInstanceVariableDataEvent event = new UserTaskInstanceVariableDataEvent();
-        event.setKogitoUserTaskInstanceId(taskId);
-        event.setKogitoProcessInstanceId(processInstanceId);
         event.setKogitoProcessId(processId);
         event.setData(body);
         return event;
@@ -347,29 +252,4 @@ public class TestUtils {
         return job;
     }
 
-    public static UserTaskInstance createUserTaskInstance(String taskId, String processInstanceId, String processId, String rootProcessInstanceId, String rootProcessId, String state,
-            long timeInterval) {
-        UserTaskInstance task = new UserTaskInstance();
-        task.setId(taskId);
-        task.setProcessInstanceId(processInstanceId);
-        task.setProcessId(processId);
-        task.setRootProcessId(rootProcessId);
-        task.setRootProcessInstanceId(rootProcessInstanceId);
-        task.setName("TaskName");
-        task.setDescription("TaskDescription");
-        task.setState(state);
-        task.setPriority("High");
-        task.setStarted(Instant.ofEpochMilli(ZonedDateTime.now().toInstant().toEpochMilli() + timeInterval).atZone(ZoneOffset.UTC));
-        task.setCompleted("Completed".equals(state) ? Instant.ofEpochMilli(ZonedDateTime.now().toInstant().toEpochMilli() + timeInterval).atZone(ZoneOffset.UTC).plus(1, ChronoUnit.HOURS) : null);
-        task.setActualOwner("kogito");
-        task.setAdminUsers(singleton("kogito"));
-        task.setAdminGroups(singleton("admin"));
-        task.setExcludedUsers(singleton("excluded"));
-        task.setPotentialUsers(singleton("potentialUser"));
-        task.setPotentialGroups(singleton("potentialGroup"));
-        task.setComments(List.of(Comment.builder().id("commentId" + taskId).content("Comment 1").updatedBy("kogito").build()));
-        task.setAttachments(List.of(Attachment.builder().id("attachmentId" + taskId).content("http://linltodoc.com/1").name("doc1").updatedBy("kogito").build()));
-
-        return task;
-    }
 }

@@ -29,8 +29,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
-import org.kie.kogito.index.jpa.model.AttachmentEntity;
-import org.kie.kogito.index.jpa.model.CommentEntity;
 import org.kie.kogito.index.jpa.model.JobEntity;
 import org.kie.kogito.index.jpa.model.MilestoneEntity;
 import org.kie.kogito.index.jpa.model.NodeEntity;
@@ -38,7 +36,6 @@ import org.kie.kogito.index.jpa.model.NodeInstanceEntity;
 import org.kie.kogito.index.jpa.model.ProcessDefinitionEntity;
 import org.kie.kogito.index.jpa.model.ProcessInstanceEntity;
 import org.kie.kogito.index.jpa.model.ProcessInstanceErrorEntity;
-import org.kie.kogito.index.jpa.model.UserTaskInstanceEntity;
 import org.kie.kogito.testcontainers.Constants;
 import org.kie.kogito.testcontainers.KogitoPostgreSqlContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -65,9 +62,6 @@ public class DDLSchemaExporter {
             metadataSources.addAnnotatedClass(NodeInstanceEntity.class);
             metadataSources.addAnnotatedClass(ProcessInstanceEntity.class);
             metadataSources.addAnnotatedClass(ProcessInstanceErrorEntity.class);
-            metadataSources.addAnnotatedClass(AttachmentEntity.class);
-            metadataSources.addAnnotatedClass(CommentEntity.class);
-            metadataSources.addAnnotatedClass(UserTaskInstanceEntity.class);
             Metadata metadata = metadataSources.buildMetadata();
 
             SchemaExport schemaExport = new SchemaExport();

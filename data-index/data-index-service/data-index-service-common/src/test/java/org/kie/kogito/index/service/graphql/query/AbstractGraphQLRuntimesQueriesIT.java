@@ -18,10 +18,8 @@
  */
 package org.kie.kogito.index.service.graphql.query;
 
-import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -33,21 +31,14 @@ import org.kie.kogito.event.process.ProcessInstanceDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceStateDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceVariableDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceVariableEventBody;
-import org.kie.kogito.event.usertask.UserTaskInstanceAttachmentDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceAttachmentEventBody;
-import org.kie.kogito.event.usertask.UserTaskInstanceCommentDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceCommentEventBody;
 import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceStateDataEvent;
 import org.kie.kogito.index.api.ExecuteArgs;
 import org.kie.kogito.index.api.KogitoRuntimeClient;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
-import org.kie.kogito.index.model.UserTaskInstance;
 import org.kie.kogito.index.service.graphql.GraphQLSchemaManagerImpl;
 import org.kie.kogito.index.test.TestUtils;
 import org.kie.kogito.jackson.utils.ObjectMapperFactory;
 import org.kie.kogito.persistence.protobuf.ProtobufService;
-import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.restassured.http.ContentType;
@@ -55,15 +46,11 @@ import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
 
 import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.kie.kogito.index.model.ProcessInstanceState.ACTIVE;
 import static org.kie.kogito.index.test.TestUtils.getJob;
 import static org.kie.kogito.index.test.TestUtils.getJobCloudEvent;
 import static org.kie.kogito.index.test.TestUtils.getProcessCloudEvent;
 import static org.kie.kogito.index.test.TestUtils.getProcessInstance;
-import static org.kie.kogito.index.test.TestUtils.getUserTaskAttachmentEvent;
-import static org.kie.kogito.index.test.TestUtils.getUserTaskCloudEvent;
-import static org.kie.kogito.index.test.TestUtils.getUserTaskCommentEvent;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -296,251 +283,6 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
         verify(dataIndexApiClient).rescheduleJob(eq("http://localhost:8080/jobs"),
                 eq(getJob(jobId, processId, processInstanceId, null, null, "SCHEDULED")),
                 eq(data));
-    }
-
-    @Test
-    void testGetTaskSchema() {
-        String processInstanceId = UUID.randomUUID().toString();
-        String taskId = UUID.randomUUID().toString();
-
-        UserTaskInstanceStateDataEvent event = getUserTaskCloudEvent(taskId, processId, processInstanceId, null,
-                null, "InProgress", user, "STARTED");
-
-        indexUserTaskCloudEvent(event);
-        checkOkResponse("{ \"query\" : \"{UserTaskInstances (where: {id: {equal:\\\"" + taskId + "\\\" }}){ " +
-                "schema ( user: \\\"" + user + "\\\", groups: [\\\"managers\\\", \\\"users\\\", \\\"IT\\\"] )" +
-                "}}\"}");
-        ArgumentCaptor<UserTaskInstance> userTaskInstanceCaptor = ArgumentCaptor.forClass(UserTaskInstance.class);
-
-        verify(dataIndexApiClient).getUserTaskSchema(eq("http://localhost:8080"),
-                userTaskInstanceCaptor.capture(),
-                eq(user), eq(groups));
-        assertUserTaskInstance(userTaskInstanceCaptor.getValue(), taskId, processId, processInstanceId, user);
-    }
-
-    @Test
-    void testUpdateUserTaskInstance() {
-        String processInstanceId = UUID.randomUUID().toString();
-        String taskId = UUID.randomUUID().toString();
-        String newDescription = "NewDescription";
-
-        UserTaskInstanceStateDataEvent event = getUserTaskCloudEvent(taskId, processId, processInstanceId, null,
-                null, "InProgress", user, "STARTED");
-
-        indexUserTaskCloudEvent(event);
-        checkOkResponse("{ \"query\" : \"mutation { UserTaskInstanceUpdate ( " +
-                "taskId: \\\"" + taskId + "\\\"," +
-                "user: \\\"" + user + "\\\", " +
-                "groups: [\\\"managers\\\", \\\"users\\\", \\\"IT\\\"]," +
-                "description:  \\\"" + newDescription + "\\\"" +
-                ")}\"}");
-        ArgumentCaptor<UserTaskInstance> userTaskInstanceCaptor = ArgumentCaptor.forClass(UserTaskInstance.class);
-        ArgumentCaptor<Map> taskInfoCaptor = ArgumentCaptor.forClass(Map.class);
-
-        verify(dataIndexApiClient).updateUserTaskInstance(eq("http://localhost:8080"),
-                userTaskInstanceCaptor.capture(),
-                eq(user), eq(groups), taskInfoCaptor.capture());
-        assertThat(taskInfoCaptor.getValue().get("description")).isEqualTo(newDescription);
-        assertUserTaskInstance(userTaskInstanceCaptor.getValue(), taskId, processId, processInstanceId, user);
-    }
-
-    @Test
-    void testCreateTaskComment() {
-        String processInstanceId = UUID.randomUUID().toString();
-        String taskId = UUID.randomUUID().toString();
-        String comment = "Comment to add";
-
-        UserTaskInstanceStateDataEvent event = getUserTaskCloudEvent(taskId, processId, processInstanceId, null,
-                null, "InProgress", user, "STARTED");
-
-        indexUserTaskCloudEvent(event);
-
-        UserTaskInstanceCommentDataEvent commmentEvent = getUserTaskCommentEvent(taskId, processId, processInstanceId, null,
-                null, "InProgress", user, UUID.randomUUID().toString(), comment, UserTaskInstanceCommentEventBody.EVENT_TYPE_ADDED);
-
-        indexUserTaskCloudEvent(commmentEvent);
-
-        checkOkResponse("{ \"query\" : \"mutation{ UserTaskInstanceCommentCreate(" +
-                "taskId: \\\"" + taskId + "\\\", " +
-                "user: \\\"" + user + "\\\", " +
-                "groups: [\\\"managers\\\", \\\"users\\\", \\\"IT\\\"]," +
-                "comment: \\\"" + comment + "\\\" " +
-                ")}\"}");
-        ArgumentCaptor<UserTaskInstance> userTaskInstanceCaptor = ArgumentCaptor.forClass(UserTaskInstance.class);
-
-        verify(dataIndexApiClient).createUserTaskInstanceComment(eq("http://localhost:8080"),
-                userTaskInstanceCaptor.capture(),
-                eq(user), eq(groups),
-                eq(comment));
-        assertUserTaskInstance(userTaskInstanceCaptor.getValue(), taskId, processId, processInstanceId, user);
-    }
-
-    @Test
-    void testUpdateUserTaskInstanceComment() {
-        String processInstanceId = UUID.randomUUID().toString();
-        String taskId = UUID.randomUUID().toString();
-        String commentId = UUID.randomUUID().toString();
-        String commentContent = "commentContent";
-
-        UserTaskInstanceStateDataEvent event = getUserTaskCloudEvent(taskId, processId, processInstanceId, null,
-                null, "InProgress", user, "STARTED");
-
-        indexUserTaskCloudEvent(event);
-
-        UserTaskInstanceCommentDataEvent commmentEvent = getUserTaskCommentEvent(taskId, processId, processInstanceId, null,
-                null, "InProgress", user, commentId, commentContent, UserTaskInstanceCommentEventBody.EVENT_TYPE_ADDED);
-
-        indexUserTaskCloudEvent(commmentEvent);
-
-        checkOkResponse("{ \"query\" : \"mutation { UserTaskInstanceCommentUpdate ( " +
-                "user: \\\"" + user + "\\\", " +
-                "groups: [\\\"managers\\\", \\\"users\\\", \\\"IT\\\"]," +
-                "commentId:  \\\"" + commentId + "\\\"" +
-                "comment:  \\\"" + commentContent + "\\\"" +
-                ")}\"}");
-        ArgumentCaptor<UserTaskInstance> userTaskInstanceCaptor = ArgumentCaptor.forClass(UserTaskInstance.class);
-
-        verify(dataIndexApiClient).updateUserTaskInstanceComment(eq("http://localhost:8080"),
-                userTaskInstanceCaptor.capture(),
-                eq(user), eq(groups), eq(commentId), eq(commentContent));
-        assertUserTaskInstance(userTaskInstanceCaptor.getValue(), taskId, processId, processInstanceId, user);
-    }
-
-    @Test
-    void testDeleteUserTaskInstanceComment() {
-        String processInstanceId = UUID.randomUUID().toString();
-        String taskId = UUID.randomUUID().toString();
-        String commentId = UUID.randomUUID().toString();
-
-        UserTaskInstanceStateDataEvent event = getUserTaskCloudEvent(taskId, processId, processInstanceId, null,
-                null, "InProgress", user, "STARTED");
-
-        indexUserTaskCloudEvent(event);
-
-        UserTaskInstanceCommentDataEvent commmentEvent = getUserTaskCommentEvent(taskId, processId, processInstanceId, null,
-                null, "InProgress", user, commentId, "my content", UserTaskInstanceCommentEventBody.EVENT_TYPE_ADDED);
-
-        indexUserTaskCloudEvent(commmentEvent);
-
-        indexUserTaskCloudEvent(event);
-        checkOkResponse("{ \"query\" : \"mutation { UserTaskInstanceCommentDelete ( " +
-                "user: \\\"" + user + "\\\", " +
-                "groups: [\\\"managers\\\", \\\"users\\\", \\\"IT\\\"]," +
-                "commentId:  \\\"" + commentId + "\\\"" +
-                ")}\"}");
-        ArgumentCaptor<UserTaskInstance> userTaskInstanceCaptor = ArgumentCaptor.forClass(UserTaskInstance.class);
-
-        verify(dataIndexApiClient).deleteUserTaskInstanceComment(eq("http://localhost:8080"),
-                userTaskInstanceCaptor.capture(),
-                eq(user), eq(groups), eq(commentId));
-        assertUserTaskInstance(userTaskInstanceCaptor.getValue(), taskId, processId, processInstanceId, user);
-    }
-
-    @Test
-    void testCreateTaskAttachment() {
-        String processInstanceId = UUID.randomUUID().toString();
-        String taskId = UUID.randomUUID().toString();
-        String attachmentId = UUID.randomUUID().toString();
-        String attachmentName = "attachment name";
-        URI attachmentUri = URI.create("https://drive.google.com/file/d/1Z_Lipg2jzY9TNewTaskAttachmentUri");
-
-        UserTaskInstanceStateDataEvent event = getUserTaskCloudEvent(taskId, processId, processInstanceId, null,
-                null, "InProgress", user, "STARTED");
-
-        indexUserTaskCloudEvent(event);
-
-        UserTaskInstanceAttachmentDataEvent attachmentEvent = getUserTaskAttachmentEvent(taskId, processId, processInstanceId, null,
-                null, "InProgress", user, attachmentId, attachmentUri, attachmentName, UserTaskInstanceAttachmentEventBody.EVENT_TYPE_ADDED);
-
-        indexUserTaskCloudEvent(attachmentEvent);
-
-        checkOkResponse("{ \"query\" : \"mutation{ UserTaskInstanceAttachmentCreate(" +
-                "taskId: \\\"" + taskId + "\\\", " +
-                "user: \\\"" + user + "\\\", " +
-                "groups: [\\\"managers\\\", \\\"users\\\", \\\"IT\\\"]," +
-                "name: \\\"" + attachmentName + "\\\", " +
-                "uri: \\\"" + attachmentUri + "\\\" " +
-                ")}\"}");
-        ArgumentCaptor<UserTaskInstance> userTaskInstanceCaptor = ArgumentCaptor.forClass(UserTaskInstance.class);
-
-        verify(dataIndexApiClient).createUserTaskInstanceAttachment(eq("http://localhost:8080"),
-                userTaskInstanceCaptor.capture(),
-                eq(user), eq(groups),
-                eq(attachmentName),
-                eq(attachmentUri.toString()));
-        assertUserTaskInstance(userTaskInstanceCaptor.getValue(), taskId, processId, processInstanceId, user);
-    }
-
-    @Test
-    void testUpdateUserTaskInstanceAttachment() {
-        String processInstanceId = UUID.randomUUID().toString();
-        String taskId = UUID.randomUUID().toString();
-        String attachmentId = UUID.randomUUID().toString();
-        String attachmentName = "attachmentName";
-        URI attachmentUri = URI.create("http://localhost:8080");
-
-        UserTaskInstanceStateDataEvent event = getUserTaskCloudEvent(taskId, processId, processInstanceId, null,
-                null, "InProgress", user, "STARTED");
-
-        indexUserTaskCloudEvent(event);
-
-        UserTaskInstanceAttachmentDataEvent attachmentEvent = getUserTaskAttachmentEvent(taskId, processId, processInstanceId, null,
-                null, "InProgress", user, attachmentId, attachmentUri, attachmentName, UserTaskInstanceAttachmentEventBody.EVENT_TYPE_ADDED);
-
-        indexUserTaskCloudEvent(attachmentEvent);
-
-        checkOkResponse("{ \"query\" : \"mutation { UserTaskInstanceAttachmentUpdate ( " +
-                "user: \\\"" + user + "\\\", " +
-                "groups: [\\\"managers\\\", \\\"users\\\", \\\"IT\\\"]," +
-                "attachmentId:  \\\"" + attachmentId + "\\\"" +
-                "name:  \\\"" + attachmentName + "\\\"" +
-                "uri:  \\\"" + attachmentUri + "\\\"" +
-                ")}\"}");
-        ArgumentCaptor<UserTaskInstance> userTaskInstanceCaptor = ArgumentCaptor.forClass(UserTaskInstance.class);
-
-        verify(dataIndexApiClient).updateUserTaskInstanceAttachment(eq("http://localhost:8080"),
-                userTaskInstanceCaptor.capture(),
-                eq(user), eq(groups), eq(attachmentId), eq(attachmentName), eq(attachmentUri.toString()));
-        assertUserTaskInstance(userTaskInstanceCaptor.getValue(), taskId, processId, processInstanceId, user);
-    }
-
-    @Test
-    void testDeleteUserTaskInstanceAttachment() {
-        String processInstanceId = UUID.randomUUID().toString();
-        String taskId = UUID.randomUUID().toString();
-        String attachmentId = UUID.randomUUID().toString();
-        String attachmentName = "attachmentName";
-        URI attachmentUri = URI.create("http://localhost:8080");
-
-        UserTaskInstanceStateDataEvent event = getUserTaskCloudEvent(taskId, processId, processInstanceId, null,
-                null, "InProgress", user, "STARTED");
-
-        indexUserTaskCloudEvent(event);
-
-        UserTaskInstanceAttachmentDataEvent attachmentEvent = getUserTaskAttachmentEvent(taskId, processId, processInstanceId, null,
-                null, "InProgress", user, attachmentId, attachmentUri, attachmentName, UserTaskInstanceAttachmentEventBody.EVENT_TYPE_ADDED);
-
-        indexUserTaskCloudEvent(attachmentEvent);
-
-        checkOkResponse("{ \"query\" : \"mutation { UserTaskInstanceAttachmentDelete ( " +
-                "user: \\\"" + user + "\\\", " +
-                "groups: [\\\"managers\\\", \\\"users\\\", \\\"IT\\\"]," +
-                "attachmentId:  \\\"" + attachmentId + "\\\"" +
-                ")}\"}");
-        ArgumentCaptor<UserTaskInstance> userTaskInstanceCaptor = ArgumentCaptor.forClass(UserTaskInstance.class);
-
-        verify(dataIndexApiClient).deleteUserTaskInstanceAttachment(eq("http://localhost:8080"),
-                userTaskInstanceCaptor.capture(),
-                eq(user), eq(groups), eq(attachmentId));
-        assertUserTaskInstance(userTaskInstanceCaptor.getValue(), taskId, processId, processInstanceId, user);
-    }
-
-    private void assertUserTaskInstance(UserTaskInstance userTaskInstance, String taskId, String processId,
-            String processInstanceId, String actualOwner) {
-        assertThat(userTaskInstance.getId()).isEqualTo(taskId);
-        assertThat(userTaskInstance.getProcessId()).isEqualTo(processId);
-        assertThat(userTaskInstance.getProcessInstanceId()).isEqualTo(processInstanceId);
-        assertThat(userTaskInstance.getActualOwner()).isEqualTo(actualOwner);
     }
 
     private void checkOkResponse(String body) {

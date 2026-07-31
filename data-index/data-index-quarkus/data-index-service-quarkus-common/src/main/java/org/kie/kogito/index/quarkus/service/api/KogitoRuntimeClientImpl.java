@@ -20,7 +20,6 @@ package org.kie.kogito.index.quarkus.service.api;
 
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -33,7 +32,6 @@ import org.kie.kogito.index.model.*;
 import org.kie.kogito.index.service.DataIndexServiceException;
 import org.kie.kogito.index.service.KogitoRuntimeCommonClient;
 import org.kie.kogito.index.service.auth.DataIndexAuthTokenReader;
-import org.kie.kogito.usertask.model.CommentInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +40,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
@@ -73,17 +70,6 @@ class KogitoRuntimeClientImpl extends KogitoRuntimeCommonClient implements Kogit
     public static final String CANCEL_NODE_INSTANCE_PATH = "/management/processes/%s/instances/%s/nodeInstances/%s"; // nodeInstance Id
     public static final String UPDATE_NODE_INSTANCE_SLA_PATH = "/management/processes/%s/instances/%s/nodeInstances/%s/sla";
     public static final String UPDATE_PROCESS_INSTANCE_SLA_PATH = "/management/processes/%s/instances/%s/sla";
-
-    public static final String GET_TASK_SCHEMA_PATH = "/%s/%s/%s/%s/schema";
-    public static final String UPDATE_USER_TASK_INSTANCE_PATH = "/management/usertasks/%s";
-
-    public static final String CREATE_USER_TASK_INSTANCE_COMMENT_PATH = "/usertasks/instance/%s/comments";
-    public static final String UPDATE_USER_TASK_INSTANCE_COMMENT_PATH = "/usertasks/instance/%s/comments/%s";
-    public static final String DELETE_USER_TASK_INSTANCE_COMMENT_PATH = "/usertasks/instance/%s/comments/%s";
-
-    public static final String CREATE_USER_TASK_INSTANCE_ATTACHMENT_PATH = "/usertasks/instance/%s/attachments";
-    public static final String UPDATE_USER_TASK_INSTANCE_ATTACHMENT_PATH = "/usertasks/instance/%s/attachments/%s";
-    public static final String DELETE_USER_TASK_INSTANCE_ATTACHMENT_PATH = "/usertasks/instance/%s/attachments/%s";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KogitoRuntimeClientImpl.class);
 
@@ -189,76 +175,6 @@ class KogitoRuntimeClientImpl extends KogitoRuntimeCommonClient implements Kogit
         String requestURI = format(CANCEL_NODE_INSTANCE_PATH, processInstance.getProcessId(), processInstance.getId(), nodeInstanceId);
         return sendDeleteClientRequest(getWebClient(serviceURL), requestURI,
                 "Cancel NodeInstance " + nodeInstanceId + FROM_PROCESS_INSTANCE_WITH_ID + processInstance.getId());
-    }
-
-    @Override
-    public CompletableFuture<String> getUserTaskSchema(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups) {
-        String requestURI = format(GET_TASK_SCHEMA_PATH, userTaskInstance.getProcessId(), userTaskInstance.getProcessInstanceId(),
-                userTaskInstance.getName(), userTaskInstance.getExternalReferenceId()) + "?" + getUserGroupsURIParameter(user, groups);
-        LOGGER.trace("get user task schema service {} and URI {}", serviceURL, requestURI);
-        return sendGetClientRequest(getWebClient(serviceURL), requestURI,
-                "Get User Task schema for task:" + userTaskInstance.getName() + " with id: " + userTaskInstance.getId(),
-                null);
-    }
-
-    @Override
-    public CompletableFuture<String> updateUserTaskInstance(String serviceURL, UserTaskInstance userTaskInstance, String user,
-            List<String> groups, Map taskInfo) {
-        String requestURI = format(UPDATE_USER_TASK_INSTANCE_PATH, userTaskInstance.getId()) + "?" + getUserGroupsURIParameter(user, groups);
-        LOGGER.trace("Send request to {}", requestURI);
-        return sendPatchClientRequest(getWebClient(serviceURL), requestURI,
-                "Update user task instance: " + userTaskInstance.getName() + " with id: " + userTaskInstance.getId(),
-                new JsonObject(taskInfo));
-    }
-
-    @Override
-    public CompletableFuture<String> createUserTaskInstanceComment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String commentInfo) {
-        String requestURI = format(CREATE_USER_TASK_INSTANCE_COMMENT_PATH, userTaskInstance.getId()) + "?" + getUserGroupsURIParameter(user, groups);
-        return sendPostWithBodyClientRequest(getWebClient(serviceURL), requestURI,
-                "Adding comment to  UserTask:" + userTaskInstance.getName() + " with id: " + userTaskInstance.getId(),
-                Json.encode(new CommentInfo(commentInfo)), MediaType.APPLICATION_JSON);
-    }
-
-    @Override
-    public CompletableFuture<String> updateUserTaskInstanceComment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String commentId, String commentInfo) {
-        String requestURI = format(UPDATE_USER_TASK_INSTANCE_COMMENT_PATH, userTaskInstance.getId(), commentId) + "?" + getUserGroupsURIParameter(user, groups);
-        return sendPutClientRequest(getWebClient(serviceURL),
-                requestURI,
-                "Update UserTask: " + userTaskInstance.getName() + " comment:" + commentId + "  with taskid: " + userTaskInstance.getId(),
-                Json.encode(new CommentInfo(commentInfo)), MediaType.APPLICATION_JSON);
-    }
-
-    @Override
-    public CompletableFuture<String> deleteUserTaskInstanceComment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String commentId) {
-        String requestURI = format(DELETE_USER_TASK_INSTANCE_COMMENT_PATH, userTaskInstance.getId(), commentId) + "?" + getUserGroupsURIParameter(user, groups);
-        return sendDeleteClientRequest(getWebClient(serviceURL), requestURI,
-                "Delete comment : " + commentId + "of Task: " + userTaskInstance.getName() + "  with taskid: " + userTaskInstance.getId());
-    }
-
-    @Override
-    public CompletableFuture<String> createUserTaskInstanceAttachment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String name, String uri) {
-        String requestURI = format(CREATE_USER_TASK_INSTANCE_ATTACHMENT_PATH, userTaskInstance.getId()) + "?" + getUserGroupsURIParameter(user, groups);
-        return sendPostWithBodyClientRequest(getWebClient(serviceURL), requestURI,
-                "Adding attachment to  UserTask:" + userTaskInstance.getName() + " with id: " + userTaskInstance.getId(),
-                "{ \"name\": \"" + name + "\", \"uri\": \"" + uri + "\" }", MediaType.APPLICATION_JSON);
-    }
-
-    @Override
-    public CompletableFuture<String> updateUserTaskInstanceAttachment(String serviceURL, UserTaskInstance userTaskInstance, String user,
-            List<String> groups, String attachmentId, String name, String uri) {
-        String requestURI = format(UPDATE_USER_TASK_INSTANCE_ATTACHMENT_PATH, userTaskInstance.getId(), attachmentId) + "?" + getUserGroupsURIParameter(user, groups);
-        return sendJSONPutClientRequest(getWebClient(serviceURL),
-                requestURI,
-                "Update UserTask: " + userTaskInstance.getName() + " attachment:" + attachmentId +
-                        " with taskid: " + userTaskInstance.getId() + "with: " + name + " and info:" + uri,
-                "{ \"name\": \"" + name + "\", \"uri\": \"" + uri + "\" }");
-    }
-
-    @Override
-    public CompletableFuture<String> deleteUserTaskInstanceAttachment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String attachmentId) {
-        String requestURI = format(DELETE_USER_TASK_INSTANCE_ATTACHMENT_PATH, userTaskInstance.getId(), attachmentId) + "?" + getUserGroupsURIParameter(user, groups);
-        return sendDeleteClientRequest(getWebClient(serviceURL), requestURI,
-                "Delete attachment : " + attachmentId + "of Task: " + userTaskInstance.getName() + "  with taskid: " + userTaskInstance.getId());
     }
 
     private String getUserGroupsURIParameter(String user, List<String> groups) {

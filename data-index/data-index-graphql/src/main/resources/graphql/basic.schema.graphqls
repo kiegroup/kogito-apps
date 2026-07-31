@@ -11,7 +11,6 @@ schema {
 type Query {
     ProcessDefinitions(where: ProcessDefinitionArgument, orderBy: ProcessDefinitionOrderBy, pagination: Pagination): [ProcessDefinition]
     ProcessInstances(where: ProcessInstanceArgument, orderBy: ProcessInstanceOrderBy, pagination: Pagination): [ProcessInstance]
-    UserTaskInstances(where: UserTaskInstanceArgument, orderBy: UserTaskInstanceOrderBy, pagination: Pagination):  [UserTaskInstance]
     Jobs(where: JobArgument, orderBy: JobOrderBy, pagination: Pagination):  [Job]
 }
 type Mutation {
@@ -26,15 +25,6 @@ type Mutation {
     NodeInstanceCancel(id: String, nodeInstanceId: String): String
     JobCancel(id: String): String
     JobReschedule(id: String, data: String): String
-    UserTaskInstanceUpdate(taskId: String, user: String, groups: [String],  description: String, priority: String,
-        actualOwner: String, adminGroups: [String!], adminUsers: [String!], excludedUsers: [String!],
-        potentialGroups: [String!], potentialUsers: [String!], inputParams: String): String
-    UserTaskInstanceCommentCreate(taskId: String, user: String, groups: [String], comment: String): String
-    UserTaskInstanceAttachmentCreate(taskId: String, user: String, groups: [String], name: String, uri: String): String
-    UserTaskInstanceCommentUpdate(user:String, groups:[String],commentId: String, comment: String): String
-    UserTaskInstanceCommentDelete(user:String, groups:[String],commentId: String): String
-    UserTaskInstanceAttachmentUpdate(user:String, groups:[String],attachmentId: String,  name: String, uri: String): String
-    UserTaskInstanceAttachmentDelete(user:String, groups:[String], attachmentId: String): String
 }
 
 type ProcessDefinition {
@@ -369,104 +359,6 @@ input DateRange {
 input ProcessInstanceStateArgument {
     equal: ProcessInstanceState
     in: [ProcessInstanceState]
-}
-
-type Comment {
-    id: String!
-    content: String!
-    updatedBy: String!
-    updatedAt: DateTime!
-}
-
-type Attachment {
-    id: String!
-    name: String!
-    content: String!
-    updatedBy: String!
-    updatedAt: DateTime!
-}
-
-type UserTaskInstance {
-    id: String!
-    userTaskId: String
-    description: String
-    name: String
-    priority: String
-    processInstanceId: String!
-    processId: String
-    rootProcessInstanceId: String
-    rootProcessId: String
-    state: String
-    actualOwner: String
-    adminGroups: [String!]
-    adminUsers: [String!]
-    completed: DateTime
-    started: DateTime
-    excludedUsers: [String!]
-    potentialGroups: [String!]
-    potentialUsers: [String!]
-    inputs: String
-    outputs: String
-    referenceName: String
-    lastUpdate: DateTime!
-    endpoint: String
-    comments: [Comment!]
-    attachments: [Attachment!]
-    externalReferenceId : String
-    slaDueDate: DateTime
-}
-
-input UserTaskInstanceArgument {
-    and: [UserTaskInstanceArgument!]
-    or: [UserTaskInstanceArgument!]
-    not: UserTaskInstanceArgument
-    state: StringArgument
-    id: IdArgument
-    description: StringArgument
-    name: StringArgument
-    priority: StringArgument
-    processId: StringArgument
-    processInstanceId: IdArgument
-    actualOwner: StringArgument
-    potentialUsers: StringArrayArgument
-    potentialGroups: StringArrayArgument
-    excludedUsers: StringArrayArgument
-    adminGroups: StringArrayArgument
-    adminUsers: StringArrayArgument
-    completed: DateArgument
-    started: DateArgument
-    referenceName: StringArgument
-    lastUpdate: DateArgument
-    comments: CommentArgument
-    attachments: AttachmentArgument
-    slaDueDate: DateArgument
-    rootProcessInstanceId: StringArgument
-    rootProcessId: StringArgument
-    externalReferenceId: StringArgument
-    endpoint: StringArgument
-}
-
-input CommentArgument {
-    id: IdArgument
-    name: StringArgument
-}
-
-input AttachmentArgument {
-    id: IdArgument
-    name: StringArgument
-}
-
-input UserTaskInstanceOrderBy {
-    state: OrderBy
-    actualOwner: OrderBy
-    description: OrderBy
-    name: OrderBy
-    priority: OrderBy
-    processId: OrderBy
-    completed: OrderBy
-    started: OrderBy
-    referenceName: OrderBy
-    lastUpdate: OrderBy
 }
 
 enum OrderBy {

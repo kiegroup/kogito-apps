@@ -47,10 +47,6 @@ public abstract class AbstractDomainMessagingKafkaConsumerIT extends AbstractDom
         super.close();
     }
 
-    protected void sendUserTaskInstanceEvent() throws Exception {
-        send("user_task_instance_event.json", "kogito-usertaskinstances-events");
-    }
-
     protected void sendProcessInstanceEvent() throws Exception {
         send("process_instance_event.json", "kogito-processinstances-events");
     }

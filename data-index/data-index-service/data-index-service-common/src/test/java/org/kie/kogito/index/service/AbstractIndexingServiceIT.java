@@ -36,8 +36,6 @@ import org.kie.kogito.event.process.ProcessDefinitionDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceErrorDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceStateDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceStateDataEvent;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
 import org.kie.kogito.index.model.ProcessInstanceState;
 import org.kie.kogito.index.storage.DataIndexStorageService;
@@ -83,17 +81,9 @@ import static org.kie.kogito.index.service.GraphQLUtils.getProcessInstanceByIdAn
 import static org.kie.kogito.index.service.GraphQLUtils.getProcessInstanceByParentProcessInstanceId;
 import static org.kie.kogito.index.service.GraphQLUtils.getProcessInstanceByRootProcessInstanceId;
 import static org.kie.kogito.index.service.GraphQLUtils.getProcessInstanceByUpdatedBy;
-import static org.kie.kogito.index.service.GraphQLUtils.getUserTaskInstanceById;
-import static org.kie.kogito.index.service.GraphQLUtils.getUserTaskInstanceByIdAndActualOwner;
-import static org.kie.kogito.index.service.GraphQLUtils.getUserTaskInstanceByIdAndCompleted;
-import static org.kie.kogito.index.service.GraphQLUtils.getUserTaskInstanceByIdAndProcessId;
-import static org.kie.kogito.index.service.GraphQLUtils.getUserTaskInstanceByIdAndStarted;
-import static org.kie.kogito.index.service.GraphQLUtils.getUserTaskInstanceByIdAndState;
-import static org.kie.kogito.index.service.GraphQLUtils.getUserTaskInstanceByIdNoActualOwner;
 import static org.kie.kogito.index.test.TestUtils.getJobCloudEvent;
 import static org.kie.kogito.index.test.TestUtils.getProcessCloudEvent;
 import static org.kie.kogito.index.test.TestUtils.getProcessDefinitionDataEvent;
-import static org.kie.kogito.index.test.TestUtils.getUserTaskCloudEvent;
 
 public abstract class AbstractIndexingServiceIT {
 
@@ -117,7 +107,6 @@ public abstract class AbstractIndexingServiceIT {
         cacheService.getJobsStorage().clear();
         cacheService.getProcessInstanceStorage().clear();
         cacheService.getProcessDefinitionStorage().clear();
-        cacheService.getUserTaskInstanceStorage().clear();
     }
 
     @Test
@@ -130,10 +119,6 @@ public abstract class AbstractIndexingServiceIT {
         given().contentType(ContentType.JSON).body("{ \"query\" : \"{ProcessInstances{ id } }\" }")
                 .when().post("/graphql")
                 .then().log().ifValidationFails().statusCode(200).body("data.ProcessInstances", isA(Collection.class));
-
-        given().contentType(ContentType.JSON).body("{ \"query\" : \"{UserTaskInstances{ id } }\" }")
-                .when().post("/graphql")
-                .then().log().ifValidationFails().statusCode(200).body("data.UserTaskInstances", isA(Collection.class));
 
         given().contentType(ContentType.JSON).body("{ \"query\" : \"{Jobs{ id } }\" }")
                 .when().post("/graphql")
@@ -234,66 +219,6 @@ public abstract class AbstractIndexingServiceIT {
     protected abstract void indexProcessCloudEvent(ProcessInstanceDataEvent<?> startEvent);
 
     protected abstract void indexProcessCloudEvent(ProcessDefinitionDataEvent definitionDataEvent);
-
-    @Test
-    void testUserTaskInstancePagination() {
-        String processId = "deals";
-        ProcessDefinitionDataEvent definitionDataEvent = getProcessDefinitionDataEvent(processId);
-        indexProcessCloudEvent(definitionDataEvent);
-        validateProcessDefinition(getProcessDefinitionByIdAndVersion(processId, definitionDataEvent.getData().getVersion()), definitionDataEvent);
-        List<String> taskIds = new ArrayList<>();
-        IntStream.range(0, 100).forEach(i -> {
-            String taskId = UUID.randomUUID().toString();
-            UserTaskInstanceStateDataEvent event = getUserTaskCloudEvent(taskId, processId, UUID.randomUUID().toString(), null, null, "InProgress");
-            indexUserTaskCloudEvent(event);
-            taskIds.add(taskId);
-            await()
-                    .atMost(timeout)
-                    .untilAsserted(() -> given().contentType(ContentType.JSON).body("{ \"query\" : \"{UserTaskInstances { id } }\" }")
-                            .when().post("/graphql")
-                            .then().log().ifValidationFails().statusCode(200)
-                            .body("data.UserTaskInstances.size()", is(taskIds.size())));
-        });
-
-        await()
-                .atMost(timeout)
-                .untilAsserted(() -> given().contentType(ContentType.JSON).body("{ \"query\" : \"{UserTaskInstances(orderBy : {started: ASC}, pagination: {offset: 0, limit: 50}) { id } }\" }")
-                        .when().post("/graphql")
-                        .then().log().ifValidationFails().statusCode(200)
-                        .body("data.UserTaskInstances.size()", is(50))
-                        .body("data.UserTaskInstances[0].id", is(taskIds.get(0)))
-                        .body("data.UserTaskInstances[49].id", is(taskIds.get(49))));
-
-        await()
-                .atMost(timeout)
-                .untilAsserted(() -> given().contentType(ContentType.JSON).body("{ \"query\" : \"{UserTaskInstances(orderBy : {started: ASC}, pagination: {offset: 50, limit: 50}) { id } }\" }")
-                        .when().post("/graphql")
-                        .then().log().ifValidationFails().statusCode(200)
-                        .body("data.UserTaskInstances.size()", is(50))
-                        .body("data.UserTaskInstances[0].id", is(taskIds.get(50)))
-                        .body("data.UserTaskInstances[49].id", is(taskIds.get(99))));
-
-        await()
-                .atMost(timeout)
-                .untilAsserted(() -> given().contentType(ContentType.JSON).body("{ \"query\" : \"{UserTaskInstances(orderBy : {started: ASC}, pagination: {offset: 0, limit: 100}) { id } }\" }")
-                        .when().post("/graphql")
-                        .then().log().ifValidationFails().statusCode(200)
-                        .body("data.UserTaskInstances.size()", is(taskIds.size()))
-                        .body("data.UserTaskInstances[0].id", is(taskIds.get(0)))
-                        .body("data.UserTaskInstances[99].id", is(taskIds.get(99))));
-
-        await()
-                .atMost(timeout)
-                .untilAsserted(() -> given().contentType(ContentType.JSON)
-                        .body("{ \"query\" : \"{UserTaskInstances(where: {state: {in: [\\\"InProgress\\\"]}}, orderBy : {started: ASC}, pagination: {offset: 0, limit: 100}) { id } }\" }")
-                        .when().post("/graphql")
-                        .then().log().ifValidationFails().statusCode(200)
-                        .body("data.UserTaskInstances.size()", is(taskIds.size()))
-                        .body("data.UserTaskInstances[0].id", is(taskIds.get(0)))
-                        .body("data.UserTaskInstances[99].id", is(taskIds.get(99))));
-    }
-
-    protected abstract void indexUserTaskCloudEvent(UserTaskInstanceDataEvent<?> event);
 
     @Test
     void testConcurrentProcessInstanceIndex() throws Exception {
@@ -400,49 +325,6 @@ public abstract class AbstractIndexingServiceIT {
     }
 
     @Test
-    void testUserTaskInstanceIndex() throws Exception {
-        String taskId = UUID.randomUUID().toString();
-        String state = "InProgress";
-        String processId = "deals";
-        String processInstanceId = UUID.randomUUID().toString();
-        String rootProcessId = "hiring";
-        String rootProcessInstanceId = UUID.randomUUID().toString();
-
-        UserTaskInstanceStateDataEvent event = getUserTaskCloudEvent(taskId, processId, processInstanceId, rootProcessInstanceId, rootProcessId, state);
-        indexUserTaskCloudEvent(event);
-
-        validateUserTaskInstance(getUserTaskInstanceById(taskId), event);
-        validateUserTaskInstance(getUserTaskInstanceByIdAndActualOwner(taskId, "kogito"), event);
-        validateUserTaskInstance(getUserTaskInstanceByIdAndProcessId(taskId, processId), event);
-
-        validateUserTaskInstance(getUserTaskInstanceByIdAndState(taskId, event.getData().getState()), event);
-        validateUserTaskInstance(getUserTaskInstanceByIdAndStarted(taskId, formatDateTime(event.getData().getEventDate())),
-                event);
-
-        state = "Completed";
-        event = getUserTaskCloudEvent(taskId, processId, processInstanceId, rootProcessInstanceId, rootProcessId, state, "kogito", "Completed");
-        indexUserTaskCloudEvent(event);
-
-        validateUserTaskInstance(
-                getUserTaskInstanceByIdAndCompleted(taskId, formatDateTime(event.getData().getEventDate())), event);
-
-        event = getUserTaskCloudEvent(taskId, processId, processInstanceId, rootProcessInstanceId, rootProcessId, state, "admin", "Completed");
-        indexUserTaskCloudEvent(event);
-
-        validateUserTaskInstance(getUserTaskInstanceByIdAndActualOwner(taskId, "admin"), event);
-
-        event = getUserTaskCloudEvent(taskId, processId, processInstanceId, rootProcessInstanceId, rootProcessId, state, null, "Completed");
-        LOGGER.info("event {}", event);
-        indexUserTaskCloudEvent(event);
-
-        LOGGER.info("value {}", given().contentType(ContentType.JSON).body(getUserTaskInstanceById(taskId))
-                .when().post("/graphql")
-                .then().statusCode(200).extract().asString());
-
-        validateUserTaskInstance(getUserTaskInstanceByIdNoActualOwner(taskId), event);
-    }
-
-    @Test
     void testJobIndex() {
         String jobId = UUID.randomUUID().toString();
         String processId = "deals";
@@ -481,28 +363,6 @@ public abstract class AbstractIndexingServiceIT {
                         .body("data.Jobs[0].lastUpdate", is(formatZonedDateTime(event.getData().getLastUpdate())))
                         .body("data.Jobs[0].executionCounter", is(event.getData().getExecutionCounter()))
                         .body("data.Jobs[0].endpoint", is(event.getData().getEndpoint())));
-    }
-
-    protected void validateUserTaskInstance(String query, UserTaskInstanceStateDataEvent event) {
-        LOGGER.debug("GraphQL query: {}", query);
-        await()
-                .atMost(timeout)
-                .untilAsserted(() -> given().contentType(ContentType.JSON).body(query)
-                        .when().post("/graphql")
-                        .then().log().ifValidationFails().statusCode(200)
-                        .body("data.UserTaskInstances[0].id", is(event.getData().getUserTaskInstanceId()))
-                        .body("data.UserTaskInstances[0].processInstanceId", is(event.getData().getProcessInstanceId()))
-                        .body("data.UserTaskInstances[0].description", is(event.getData().getUserTaskDescription()))
-                        .body("data.UserTaskInstances[0].name", is(event.getData().getUserTaskName()))
-                        .body("data.UserTaskInstances[0].priority", is(event.getData().getUserTaskPriority()))
-                        .body("data.UserTaskInstances[0].actualOwner", event.getData().getActualOwner() != null ? is(event.getData().getActualOwner()) : anything())
-                        .body("data.UserTaskInstances[0].started", anything())
-                        .body("data.UserTaskInstances[0].lastUpdate", anything())
-                        .body("data.UserTaskInstances[0].rootProcessId", is(event.getKogitoRootProcessId()))
-                        .body("data.UserTaskInstances[0].rootProcessInstanceId", is(event.getKogitoRootProcessInstanceId()))
-                        .body("data.UserTaskInstances[0].endpoint",
-                                is(event.getSource().toString() + "/" + event.getData().getProcessInstanceId() + "/" + event.getData().getUserTaskName() + "/"
-                                        + event.getData().getExternalReferenceId())));
     }
 
 }

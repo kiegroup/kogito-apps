@@ -21,10 +21,8 @@ package org.kie.kogito.index.service.messaging;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.kie.kogito.event.DataEvent;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
 import org.kie.kogito.index.service.IndexingService;
 import org.kie.kogito.index.service.json.ProcessInstanceMetaMapper;
-import org.kie.kogito.index.service.json.UserTaskInstanceMetaMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,9 +60,6 @@ public class DomainEventConsumer {
     private ObjectNode getDomainData(DataEvent<?> event) {
         if (event instanceof ProcessInstanceDataEvent) {
             return new ProcessInstanceMetaMapper().apply((ProcessInstanceDataEvent<?>) event);
-        }
-        if (event instanceof UserTaskInstanceDataEvent) {
-            return new UserTaskInstanceMetaMapper().apply((UserTaskInstanceDataEvent<?>) event);
         }
         throw new IllegalArgumentException(
                 format("Unknown message type: '%s' for event class: '%s'", event.getType(), event.getClass().getName()));

@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.kie.kogito.event.DataEvent;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
 import org.kie.kogito.index.model.ProcessInstanceState;
 import org.kie.kogito.index.service.IndexingService;
@@ -38,7 +37,6 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import jakarta.enterprise.event.Event;
 
 import static org.kie.kogito.index.test.TestUtils.getProcessCloudEvent;
-import static org.kie.kogito.index.test.TestUtils.getUserTaskCloudEvent;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -76,23 +74,6 @@ public class ReactiveMessagingEventConsumerTest {
     }
 
     @Test
-    public void testOnUserTaskInstanceEvent() {
-
-        String taskId = UUID.randomUUID().toString();
-        String processId = "travels";
-        String processInstanceId = UUID.randomUUID().toString();
-
-        UserTaskInstanceDataEvent event = getUserTaskCloudEvent(taskId, processId, processInstanceId, null, null, "InProgress");
-
-        UniAssertSubscriber<Void> future = consumer.onUserTaskInstanceEvent(event).subscribe()
-                .withSubscriber(UniAssertSubscriber.create());
-
-        future.awaitItem().assertCompleted();
-        verify(service).indexUserTaskInstanceEvent(any());
-        verify(eventPublisher).fire(event);
-    }
-
-    @Test
     public void testOnProcessInstanceEventException() {
         ProcessInstanceDataEvent event = mock(ProcessInstanceDataEvent.class);
         doThrow(new RuntimeException("")).when(service).indexProcessInstanceEvent(any());
@@ -102,19 +83,6 @@ public class ReactiveMessagingEventConsumerTest {
 
         future.awaitFailure().assertFailedWith(RuntimeException.class, "");
         verify(service).indexProcessInstanceEvent(any());
-        verify(eventPublisher, never()).fire(event);
-    }
-
-    @Test
-    public void testOnUserTaskInstanceEventException() {
-        UserTaskInstanceDataEvent event = mock(UserTaskInstanceDataEvent.class);
-        doThrow(new RuntimeException("")).when(service).indexUserTaskInstanceEvent(any());
-
-        UniAssertSubscriber<Void> future = consumer.onUserTaskInstanceEvent(event).subscribe()
-                .withSubscriber(UniAssertSubscriber.create());
-
-        future.awaitFailure().assertFailedWith(RuntimeException.class, "");
-        verify(service).indexUserTaskInstanceEvent(any());
         verify(eventPublisher, never()).fire(event);
     }
 

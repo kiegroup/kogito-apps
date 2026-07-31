@@ -71,11 +71,6 @@ public abstract class AbstractGraphQLQueryOrderByIT {
     }
 
     @Test
-    void testUserTaskInstancesSort() {
-        testSortBy("UserTaskInstances");
-    }
-
-    @Test
     void testJobsSort() {
         testSortBy("Jobs");
     }

@@ -19,7 +19,6 @@
 package org.kie.kogito.index.service;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -29,8 +28,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.kie.kogito.event.process.ProcessInstanceErrorDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceStateDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceStateDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceStateEventBody;
 import org.kie.kogito.index.test.TestUtils;
 import org.kie.kogito.persistence.protobuf.ProtobufService;
 
@@ -50,17 +47,13 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.kie.kogito.index.DateTimeUtils.formatDateTime;
 import static org.kie.kogito.index.model.ProcessInstanceState.ACTIVE;
 import static org.kie.kogito.index.model.ProcessInstanceState.COMPLETED;
-import static org.kie.kogito.index.service.GraphQLUtils.getDealsByTaskId;
 import static org.kie.kogito.index.service.GraphQLUtils.getProcessInstanceById;
 import static org.kie.kogito.index.service.GraphQLUtils.getProcessInstanceByIdAndState;
 import static org.kie.kogito.index.service.GraphQLUtils.getProcessInstanceByParentProcessInstanceId;
 import static org.kie.kogito.index.service.GraphQLUtils.getTravelsByProcessInstanceId;
-import static org.kie.kogito.index.service.GraphQLUtils.getTravelsByUserTaskId;
-import static org.kie.kogito.index.service.GraphQLUtils.getUserTaskInstanceById;
 import static org.kie.kogito.index.test.TestUtils.deriveProcessVariableCloudEvent;
 import static org.kie.kogito.index.test.TestUtils.getProcessCloudEvent;
 import static org.kie.kogito.index.test.TestUtils.getProcessInstanceVariablesMap;
-import static org.kie.kogito.index.test.TestUtils.getUserTaskCloudEvent;
 
 public abstract class AbstractDomainIndexingServiceIT extends AbstractIndexingServiceIT {
 
@@ -260,171 +253,6 @@ public abstract class AbstractDomainIndexingServiceIT extends AbstractIndexingSe
 
         validateProcessInstance(getProcessInstanceByIdAndState(processInstanceId, COMPLETED), endEvent, subProcessInstanceId);
 
-        UserTaskInstanceStateDataEvent firstUserTaskEvent = getUserTaskCloudEvent(firstTaskId, subProcessId, subProcessInstanceId,
-                processInstanceId, processId, state);
-
-        indexUserTaskCloudEvent(firstUserTaskEvent);
-
-        validateUserTaskInstance(getUserTaskInstanceById(firstTaskId), firstUserTaskEvent);
-
-        given().contentType(ContentType.JSON)
-                .body(getTravelsByUserTaskId(firstTaskId))
-                .when().post("/graphql")
-                .then().log().ifValidationFails().statusCode(200)
-                .body("data.Travels[0].id", is(processInstanceId))
-                .body("data.Travels[0].__typename", is("Travels"))
-                .body("data.Travels[0].metadata.lastUpdate", anything())
-                .body("data.Travels[0].metadata.userTasks.size()", is(1))
-                .body("data.Travels[0].metadata.userTasks[0].id", is(firstTaskId))
-                .body("data.Travels[0].metadata.userTasks[0].processInstanceId", is(subProcessInstanceId))
-                .body("data.Travels[0].metadata.userTasks[0].description", is("TaskDescription"))
-                .body("data.Travels[0].metadata.userTasks[0].name", is("TaskName"))
-                .body("data.Travels[0].metadata.userTasks[0].priority", is("High"))
-                .body("data.Travels[0].metadata.userTasks[0].actualOwner", is("kogito"))
-                .body("data.Travels[0].metadata.userTasks[0].lastUpdate", anything())
-                .body("data.Travels[0].metadata.processInstances.size()", is(2))
-                .body("data.Travels[0].metadata.processInstances[0].id", is(processInstanceId))
-                .body("data.Travels[0].metadata.processInstances[0].processId", is(processId))
-                .body("data.Travels[0].metadata.processInstances[0].processName", is(endEvent.getData().getProcessName()))
-                .body("data.Travels[0].metadata.processInstances[0].rootProcessId", is(nullValue()))
-                .body("data.Travels[0].metadata.processInstances[0].rootProcessInstanceId", is(nullValue()))
-                .body("data.Travels[0].metadata.processInstances[0].parentProcessInstanceId", is(nullValue()))
-                .body("data.Travels[0].metadata.processInstances[0].start", anything())
-                .body("data.Travels[0].metadata.processInstances[0].end", anything())
-                .body("data.Travels[0].metadata.processInstances[0].lastUpdate", anything())
-                .body("data.Travels[0].metadata.processInstances[1].id", is(subProcessInstanceId))
-                .body("data.Travels[0].metadata.processInstances[1].processId", is(subProcessId))
-                .body("data.Travels[0].metadata.processInstances[1].processName", is(subProcessStartEvent.getData().getProcessName()))
-                .body("data.Travels[0].metadata.processInstances[1].rootProcessId", is(processId))
-                .body("data.Travels[0].metadata.processInstances[1].rootProcessInstanceId", is(processInstanceId))
-                .body("data.Travels[0].metadata.processInstances[1].parentProcessInstanceId", is(processInstanceId))
-                .body("data.Travels[0].metadata.processInstances[1].start", is(formatDateTime(subProcessStartEvent.getData().getEventDate())))
-                .body("data.Travels[0].metadata.processInstances[1].end", is(nullValue()))
-                .body("data.Travels[0].metadata.processInstances[1].endpoint", is(subProcessStartEvent.getSource().toString()))
-                .body("data.Travels[0].metadata.processInstances[1].serviceUrl", is("http://localhost:8080"))
-                .body("data.Travels[0].metadata.processInstances[1].lastUpdate", anything());
-
-        UserTaskInstanceStateDataEvent secondUserTaskEvent = getUserTaskCloudEvent(secondTaskId, processId, processInstanceId, null,
-                null, state);
-
-        indexUserTaskCloudEvent(secondUserTaskEvent);
-
-        validateUserTaskInstance(getUserTaskInstanceById(secondTaskId), secondUserTaskEvent);
-
-        given().contentType(ContentType.JSON)
-                .body(getTravelsByUserTaskId(secondTaskId))
-                .when().post("/graphql")
-                .then().log().ifValidationFails().statusCode(200)
-                .body("data.Travels[0].id", is(processInstanceId))
-                .body("data.Travels[0].__typename", is("Travels"))
-                .body("data.Travels[0].metadata.lastUpdate", anything())
-                .body("data.Travels[0].metadata.userTasks.size()", is(2))
-                .body("data.Travels[0].metadata.userTasks[0].id", is(firstTaskId))
-                .body("data.Travels[0].metadata.userTasks[0].processInstanceId", is(subProcessInstanceId))
-                .body("data.Travels[0].metadata.userTasks[0].description", is("TaskDescription"))
-                .body("data.Travels[0].metadata.userTasks[0].name", is("TaskName"))
-                .body("data.Travels[0].metadata.userTasks[0].priority", is("High"))
-                .body("data.Travels[0].metadata.userTasks[0].actualOwner", is("kogito"))
-                .body("data.Travels[0].metadata.userTasks[0].lastUpdate", anything())
-                .body("data.Travels[0].metadata.userTasks[1].id", is(secondTaskId))
-                .body("data.Travels[0].metadata.userTasks[1].processInstanceId", is(processInstanceId))
-                .body("data.Travels[0].metadata.userTasks[1].description", is("TaskDescription"))
-                .body("data.Travels[0].metadata.userTasks[1].name", is("TaskName"))
-                .body("data.Travels[0].metadata.userTasks[1].priority", is("High"))
-                .body("data.Travels[0].metadata.userTasks[1].actualOwner", is("kogito"))
-                .body("data.Travels[0].metadata.userTasks[1].lastUpdate", anything())
-                .body("data.Travels[0].metadata.processInstances.size()", is(2))
-                .body("data.Travels[0].metadata.processInstances[0].id", is(processInstanceId))
-                .body("data.Travels[0].metadata.processInstances[0].processId", is(processId))
-                .body("data.Travels[0].metadata.processInstances[0].processName", is(endEvent.getData().getProcessName()))
-                .body("data.Travels[0].metadata.processInstances[0].rootProcessId", is(nullValue()))
-                .body("data.Travels[0].metadata.processInstances[0].rootProcessInstanceId", is(nullValue()))
-                .body("data.Travels[0].metadata.processInstances[0].parentProcessInstanceId", is(nullValue()))
-                .body("data.Travels[0].metadata.processInstances[0].start", anything())
-                .body("data.Travels[0].metadata.processInstances[0].end", anything())
-                .body("data.Travels[0].metadata.processInstances[0].lastUpdate", anything())
-                .body("data.Travels[0].metadata.processInstances[0].endpoint", is(endEvent.getSource().toString()))
-                .body("data.Travels[0].metadata.processInstances[0].serviceUrl", is("http://localhost:8080"))
-                .body("data.Travels[0].metadata.processInstances[1].id", is(subProcessInstanceId))
-                .body("data.Travels[0].metadata.processInstances[1].processId", is(subProcessId))
-                .body("data.Travels[0].metadata.processInstances[1].processName", is(subProcessStartEvent.getData().getProcessName()))
-                .body("data.Travels[0].metadata.processInstances[1].rootProcessId", is(processId))
-                .body("data.Travels[0].metadata.processInstances[1].rootProcessInstanceId", is(processInstanceId))
-                .body("data.Travels[0].metadata.processInstances[1].parentProcessInstanceId", is(processInstanceId))
-                .body("data.Travels[0].metadata.processInstances[1].start", anything())
-                .body("data.Travels[0].metadata.processInstances[1].lastUpdate", anything())
-                .body("data.Travels[0].metadata.processInstances[1].end", is(nullValue()))
-                .body("data.Travels[0].metadata.processInstances[1].endpoint", is(subProcessStartEvent.getSource().toString()))
-                .body("data.Travels[0].metadata.processInstances[1].serviceUrl", is("http://localhost:8080"))
-                .body("data.Travels[0].traveller.firstName", is("Maciej"))
-                .body("data.Travels[0].hotel.name", is("Meriton"))
-                .body("data.Travels[0].flight.flightNumber", is("MX555"))
-                .body("data.Travels[0].flight.arrival", is("2019-08-20T22:12:57.34Z"))
-                .body("data.Travels[0].flight.departure", is("2019-08-20T07:12:57.34Z"));
-    }
-
-    @Test
-    void testIndexingDomainUsingUserTaskEventFirst() throws Exception {
-        String taskId = UUID.randomUUID().toString();
-        String state = "InProgress";
-        String processId = "travels";
-        String processInstanceId = UUID.randomUUID().toString();
-
-        protobufService.registerProtoBufferType(getProcessProtobufFileContent());
-
-        given().contentType(ContentType.JSON).body("{ \"query\" : \"{ Travels{ id } }\" }")
-                .when().post("/graphql")
-                .then().log().ifValidationFails().statusCode(200).body("data.Travels", isA(Collection.class));
-
-        UserTaskInstanceStateDataEvent userTaskEvent = getUserTaskCloudEvent(taskId, processId, processInstanceId, null, null, state);
-        indexUserTaskCloudEvent(userTaskEvent);
-
-        given().contentType(ContentType.JSON)
-                .body(getTravelsByUserTaskId(taskId))
-                .when().post("/graphql")
-                .then().log().ifValidationFails().statusCode(200)
-                .body("data.Travels[0].id", is(processInstanceId))
-                .body("data.Travels[0].__typename", is("Travels"))
-                .body("data.Travels[0].metadata.lastUpdate", anything())
-                .body("data.Travels[0].metadata.userTasks.size()", is(1))
-                .body("data.Travels[0].metadata.userTasks[0].id", is(taskId))
-                .body("data.Travels[0].metadata.userTasks[0].processInstanceId", is(processInstanceId))
-                .body("data.Travels[0].metadata.userTasks[0].description", is(userTaskEvent.getData().getUserTaskDescription()))
-                .body("data.Travels[0].metadata.userTasks[0].name", is(userTaskEvent.getData().getUserTaskName()))
-                .body("data.Travels[0].metadata.userTasks[0].priority", is(userTaskEvent.getData().getUserTaskPriority()))
-                .body("data.Travels[0].metadata.userTasks[0].actualOwner", is(userTaskEvent.getData().getActualOwner()))
-                .body("data.Travels[0].metadata.userTasks[0].lastUpdate", anything())
-                .body("data.Travels[0].metadata.processInstances", is(nullValue()));
-
-        ProcessInstanceStateDataEvent processEvent = getProcessCloudEvent(processId, processInstanceId, ACTIVE, null, null, null, "currentUser");
-
-        indexProcessCloudEvent(processEvent);
-
-        given().contentType(ContentType.JSON)
-                .body(getTravelsByProcessInstanceId(processInstanceId))
-                .when().post("/graphql")
-                .then().log().ifValidationFails().statusCode(200)
-                .body("data.Travels[0].id", is(processInstanceId))
-                .body("data.Travels[0].__typename", is("Travels"))
-                .body("data.Travels[0].metadata.lastUpdate", anything())
-                .body("data.Travels[0].metadata.userTasks.size()", is(1))
-                .body("data.Travels[0].metadata.userTasks[0].id", is(taskId))
-                .body("data.Travels[0].metadata.userTasks[0].processInstanceId", is(processInstanceId))
-                .body("data.Travels[0].metadata.userTasks[0].description", is(userTaskEvent.getData().getUserTaskDescription()))
-                .body("data.Travels[0].metadata.userTasks[0].name", is(userTaskEvent.getData().getUserTaskName()))
-                .body("data.Travels[0].metadata.userTasks[0].priority", is(userTaskEvent.getData().getUserTaskPriority()))
-                .body("data.Travels[0].metadata.userTasks[0].actualOwner", is(userTaskEvent.getData().getActualOwner()))
-                .body("data.Travels[0].metadata.userTasks[0].lastUpdate", anything())
-                .body("data.Travels[0].metadata.processInstances.size()", is(1))
-                .body("data.Travels[0].metadata.processInstances[0].id", is(processInstanceId))
-                .body("data.Travels[0].metadata.processInstances[0].processId", is(processId))
-                .body("data.Travels[0].metadata.processInstances[0].processName", is(processEvent.getData().getProcessName()))
-                .body("data.Travels[0].metadata.processInstances[0].rootProcessId", is(nullValue()))
-                .body("data.Travels[0].metadata.processInstances[0].rootProcessInstanceId", is(nullValue()))
-                .body("data.Travels[0].metadata.processInstances[0].parentProcessInstanceId", is(nullValue()))
-                .body("data.Travels[0].metadata.processInstances[0].lastUpdate", anything())
-                .body("data.Travels[0].metadata.processInstances[0].endpoint", is(processEvent.getSource().toString()))
-                .body("data.Travels[0].metadata.processInstances[0].serviceUrl", is("http://localhost:8080"));
     }
 
     @Test
@@ -450,7 +278,6 @@ public abstract class AbstractDomainIndexingServiceIT extends AbstractIndexingSe
                 .then().log().ifValidationFails().statusCode(200)
                 .body("data.Travels[0].id", is(processInstanceId))
                 .body("data.Travels[0].metadata.lastUpdate", anything())
-                .body("data.Travels[0].metadata.userTasks", is(nullValue()))
                 .body("data.Travels[0].metadata.processInstances.size()", is(1))
                 .body("data.Travels[0].metadata.processInstances[0].id", is(processInstanceId))
                 .body("data.Travels[0].metadata.processInstances[0].processId", is(processId))
@@ -462,33 +289,6 @@ public abstract class AbstractDomainIndexingServiceIT extends AbstractIndexingSe
                 .body("data.Travels[0].metadata.processInstances[0].endpoint", is(processEvent.getSource().toString()))
                 .body("data.Travels[0].metadata.processInstances[0].serviceUrl", is("http://localhost:8080"));
 
-        UserTaskInstanceStateDataEvent userTaskEvent = getUserTaskCloudEvent(taskId, processId, processInstanceId, null, null, state);
-        indexUserTaskCloudEvent(userTaskEvent);
-
-        given().contentType(ContentType.JSON)
-                .body(getTravelsByUserTaskId(taskId))
-                .when().post("/graphql")
-                .then().log().ifValidationFails().statusCode(200)
-                .body("data.Travels[0].id", is(processInstanceId))
-                .body("data.Travels[0].metadata.lastUpdate", anything())
-                .body("data.Travels[0].metadata.userTasks.size()", is(1))
-                .body("data.Travels[0].metadata.userTasks[0].id", is(taskId))
-                .body("data.Travels[0].metadata.userTasks[0].processInstanceId", is(processInstanceId))
-                .body("data.Travels[0].metadata.userTasks[0].description", is(userTaskEvent.getData().getUserTaskDescription()))
-                .body("data.Travels[0].metadata.userTasks[0].name", is(userTaskEvent.getData().getUserTaskName()))
-                .body("data.Travels[0].metadata.userTasks[0].priority", is(userTaskEvent.getData().getUserTaskPriority()))
-                .body("data.Travels[0].metadata.userTasks[0].actualOwner", is(userTaskEvent.getData().getActualOwner()))
-                .body("data.Travels[0].metadata.userTasks[0].lastUpdate", anything())
-                .body("data.Travels[0].metadata.processInstances.size()", is(1))
-                .body("data.Travels[0].metadata.processInstances[0].id", is(processInstanceId))
-                .body("data.Travels[0].metadata.processInstances[0].processId", is(processId))
-                .body("data.Travels[0].metadata.processInstances[0].processName", is(processEvent.getData().getProcessName()))
-                .body("data.Travels[0].metadata.processInstances[0].rootProcessId", is(nullValue()))
-                .body("data.Travels[0].metadata.processInstances[0].rootProcessInstanceId", is(nullValue()))
-                .body("data.Travels[0].metadata.processInstances[0].parentProcessInstanceId", is(nullValue()))
-                .body("data.Travels[0].metadata.processInstances[0].lastUpdate", anything())
-                .body("data.Travels[0].metadata.processInstances[0].endpoint", is(processEvent.getSource().toString()))
-                .body("data.Travels[0].metadata.processInstances[0].serviceUrl", is("http://localhost:8080"));
     }
 
     @Test
@@ -505,15 +305,13 @@ public abstract class AbstractDomainIndexingServiceIT extends AbstractIndexingSe
                 .then().log().ifValidationFails().statusCode(200).body("data.Travels", isA(Collection.class));
 
         ProcessInstanceStateDataEvent processEvent = getProcessCloudEvent(processId, processInstanceId, ACTIVE, null, null, null, "currentUser");
-        UserTaskInstanceStateDataEvent userTaskEvent = getUserTaskCloudEvent(taskId, processId, processInstanceId, null, null, state);
 
         for (Map.Entry<String, Object> entry : getProcessInstanceVariablesMap().entrySet()) {
             indexProcessCloudEvent(deriveProcessVariableCloudEvent(processEvent, entry.getKey(), entry.getValue()));
         }
 
         CompletableFuture.allOf(
-                CompletableFuture.runAsync(() -> indexProcessCloudEvent(processEvent)),
-                CompletableFuture.runAsync(() -> indexUserTaskCloudEvent(userTaskEvent)))
+                CompletableFuture.runAsync(() -> indexProcessCloudEvent(processEvent)))
                 .get();
 
         given().contentType(ContentType.JSON)
@@ -525,14 +323,6 @@ public abstract class AbstractDomainIndexingServiceIT extends AbstractIndexingSe
                 .body("data.Travels[0].hotel.name", is("Meriton"))
                 .body("data.Travels[0].traveller.firstName", is("Maciej"))
                 .body("data.Travels[0].metadata.lastUpdate", anything())
-                .body("data.Travels[0].metadata.userTasks.size()", is(1))
-                .body("data.Travels[0].metadata.userTasks[0].id", is(taskId))
-                .body("data.Travels[0].metadata.userTasks[0].processInstanceId", is(processInstanceId))
-                .body("data.Travels[0].metadata.userTasks[0].description", is(userTaskEvent.getData().getUserTaskDescription()))
-                .body("data.Travels[0].metadata.userTasks[0].name", is(userTaskEvent.getData().getUserTaskName()))
-                .body("data.Travels[0].metadata.userTasks[0].priority", is(userTaskEvent.getData().getUserTaskPriority()))
-                .body("data.Travels[0].metadata.userTasks[0].actualOwner", is(userTaskEvent.getData().getActualOwner()))
-                .body("data.Travels[0].metadata.userTasks[0].lastUpdate", anything())
                 .body("data.Travels[0].metadata.processInstances.size()", is(1))
                 .body("data.Travels[0].metadata.processInstances[0].id", is(processInstanceId))
                 .body("data.Travels[0].metadata.processInstances[0].processId", is(processId))
@@ -649,60 +439,6 @@ public abstract class AbstractDomainIndexingServiceIT extends AbstractIndexingSe
                                 errorEvent.getData().getNodeDefinitionId() == null ? is(nullValue()) : is(errorEvent.getData().getNodeDefinitionId())));
     }
 
-    @Test
-    void testUserTaskInstanceDomainIndex() throws Exception {
-        String taskId = UUID.randomUUID().toString();
-        String state = "InProgress";
-        String processId = "deals";
-        String processInstanceId = UUID.randomUUID().toString();
-
-        protobufService.registerProtoBufferType(getUserTaskProtobufFileContent());
-
-        given().contentType(ContentType.JSON).body("{ \"query\" : \"{ Deals{ id } }\" }")
-                .when().post("/graphql")
-                .then().log().ifValidationFails().statusCode(200).body("data.Deals", isA(Collection.class));
-
-        UserTaskInstanceStateDataEvent event;
-
-        event = getUserTaskCloudEvent(taskId, processId, processInstanceId, null, null, state);
-        indexUserTaskCloudEvent(event);
-
-        validateUserTaskInstance(getUserTaskInstanceById(taskId), event);
-
-        given().contentType(ContentType.JSON)
-                .body(getDealsByTaskId(taskId))
-                .when().post("/graphql")
-                .then().log().ifValidationFails().statusCode(200)
-                .body("data.Deals[0].id", is(processInstanceId))
-                .body("data.Deals[0].__typename", is("Deals"))
-                .body("data.Deals[0].metadata.userTasks.size()", is(1))
-                .body("data.Deals[0].metadata.userTasks[0].id", is(taskId))
-                .body("data.Deals[0].metadata.userTasks[0].description", is("TaskDescription"))
-                .body("data.Deals[0].metadata.userTasks[0].state", is("InProgress"))
-                .body("data.Deals[0].metadata.userTasks[0].name", is("TaskName"))
-                .body("data.Deals[0].metadata.userTasks[0].priority", is("High"))
-                .body("data.Deals[0].metadata.userTasks[0].actualOwner", is("kogito"))
-                .body("data.Deals[0].metadata.userTasks[0].started", is(formatDateTime(event.getData().getEventDate())))
-                .body("data.Deals[0].metadata.userTasks[0].lastUpdate", anything());
-
-        event = getUserTaskCloudEvent(taskId, processId, processInstanceId, null, null, state, "kogito", "Completed");
-        UserTaskInstanceStateEventBody body = UserTaskInstanceStateEventBody.create()
-                .eventType("Completed")
-                .userTaskInstanceId(taskId)
-                .state("Completed")
-                .userTaskName("TaskName")
-                .userTaskDescription("TaskDescription")
-                .userTaskPriority("Low")
-                .actualOwner("admin")
-                .eventDate(new Date())
-                .processInstanceId(processInstanceId)
-                .build();
-        event.setData(body);
-
-        indexUserTaskCloudEvent(event);
-
-    }
-
     private String getProtoBufferFileWithoutModelType() {
         return "package org.demo;\n" +
                 "option kogito_id=\"travels\";\n" +
@@ -757,5 +493,4 @@ public abstract class AbstractDomainIndexingServiceIT extends AbstractIndexingSe
 
     protected abstract String getProcessProtobufFileContent() throws Exception;
 
-    protected abstract String getUserTaskProtobufFileContent() throws Exception;
 }

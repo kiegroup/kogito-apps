@@ -32,19 +32,10 @@ import org.kie.kogito.event.process.ProcessInstanceNodeDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceSLADataEvent;
 import org.kie.kogito.event.process.ProcessInstanceStateDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceVariableDataEvent;
-import org.kie.kogito.event.usertask.MultipleUserTaskInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceAssignmentDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceAttachmentDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceCommentDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDeadlineDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceStateDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceVariableDataEvent;
 import org.kie.kogito.index.model.Job;
 import org.kie.kogito.index.model.ProcessDefinitionKey;
 import org.kie.kogito.index.storage.DataIndexStorageService;
 import org.kie.kogito.index.storage.ProcessInstanceStorage;
-import org.kie.kogito.index.storage.UserTaskInstanceStorage;
 import org.kie.kogito.persistence.api.Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,10 +50,8 @@ import jakarta.inject.Inject;
 import static org.kie.kogito.index.json.JsonUtils.getObjectMapper;
 import static org.kie.kogito.index.storage.Constants.ID;
 import static org.kie.kogito.index.storage.Constants.KOGITO_DOMAIN_ATTRIBUTE;
-import static org.kie.kogito.index.storage.Constants.LAST_UPDATE;
 import static org.kie.kogito.index.storage.Constants.PROCESS_ID;
 import static org.kie.kogito.index.storage.Constants.PROCESS_INSTANCES_DOMAIN_ATTRIBUTE;
-import static org.kie.kogito.index.storage.Constants.USER_TASK_INSTANCES_DOMAIN_ATTRIBUTE;
 
 @ApplicationScoped
 public class IndexingService {
@@ -96,25 +85,6 @@ public class IndexingService {
     public void indexProcessDefinition(ProcessDefinitionDataEvent definitionDataEvent) {
         ProcessDefinitionKey key = new ProcessDefinitionKey(definitionDataEvent.getKogitoProcessId(), definitionDataEvent.getData().getVersion());
         manager.getProcessDefinitionStorage().put(key, ProcessDefinitionHelper.merge(manager.getProcessDefinitionStorage().get(key), definitionDataEvent));
-    }
-
-    public <T> void indexUserTaskInstanceEvent(UserTaskInstanceDataEvent<T> event) {
-        UserTaskInstanceStorage storage = manager.getUserTaskInstanceStorage();
-        if (event instanceof MultipleUserTaskInstanceDataEvent) {
-            storage.indexGroup((MultipleUserTaskInstanceDataEvent) event);
-        } else if (event instanceof UserTaskInstanceAssignmentDataEvent) {
-            storage.indexAssignment((UserTaskInstanceAssignmentDataEvent) event);
-        } else if (event instanceof UserTaskInstanceAttachmentDataEvent) {
-            storage.indexAttachment((UserTaskInstanceAttachmentDataEvent) event);
-        } else if (event instanceof UserTaskInstanceDeadlineDataEvent) {
-            storage.indexDeadline((UserTaskInstanceDeadlineDataEvent) event);
-        } else if (event instanceof UserTaskInstanceStateDataEvent) {
-            storage.indexState((UserTaskInstanceStateDataEvent) event);
-        } else if (event instanceof UserTaskInstanceCommentDataEvent) {
-            storage.indexComment((UserTaskInstanceCommentDataEvent) event);
-        } else if (event instanceof UserTaskInstanceVariableDataEvent) {
-            storage.indexVariable((UserTaskInstanceVariableDataEvent) event);
-        }
     }
 
     public void indexJob(Job job) {
@@ -167,8 +137,6 @@ public class IndexingService {
         }
 
         mergeProcessInstance((ObjectNode) newModel.get(KOGITO_DOMAIN_ATTRIBUTE), (ObjectNode) updateData.get(KOGITO_DOMAIN_ATTRIBUTE));
-        mergeUserTaskInstance((ObjectNode) newModel.get(KOGITO_DOMAIN_ATTRIBUTE), (ObjectNode) updateData.get(KOGITO_DOMAIN_ATTRIBUTE));
-
     }
 
     private void copyFieldsExcept(ObjectNode newModel, ObjectNode updateData, String... exceptions) {
@@ -182,46 +150,6 @@ public class IndexingService {
                 newModel.set(key, node);
             }
         }
-    }
-
-    private void mergeUserTaskInstance(ObjectNode newModel, ObjectNode updateData) {
-        if (!updateData.has(USER_TASK_INSTANCES_DOMAIN_ATTRIBUTE)) {
-            return;
-        }
-
-        if (!newModel.has(USER_TASK_INSTANCES_DOMAIN_ATTRIBUTE)) {
-            newModel.set(USER_TASK_INSTANCES_DOMAIN_ATTRIBUTE, updateData.get(USER_TASK_INSTANCES_DOMAIN_ATTRIBUTE));
-            return;
-        }
-        newModel.set(LAST_UPDATE, updateData.get(LAST_UPDATE));
-
-        ArrayNode currentUserTaskModel = (ArrayNode) newModel.get(USER_TASK_INSTANCES_DOMAIN_ATTRIBUTE);
-        ArrayNode updateUserTasks = (ArrayNode) updateData.get(USER_TASK_INSTANCES_DOMAIN_ATTRIBUTE);
-
-        ArrayNode newArrayNode = getObjectMapper().createArrayNode();
-        newArrayNode.addAll(currentUserTaskModel);
-        for (int i = 0; i < updateUserTasks.size(); i++) {
-            String indexId = updateUserTasks.get(i).get(ID).asText();
-            boolean found = false;
-            for (int j = 0; j < currentUserTaskModel.size(); j++) {
-                String currentIndexId = currentUserTaskModel.get(j).get(ID).asText();
-                if (indexId.equals(currentIndexId)) {
-                    ObjectNode currentNode = (ObjectNode) newArrayNode.get(j);
-                    ObjectNode updateNode = ((ObjectNode) updateUserTasks.get(i));
-                    copyFieldsExcept(currentNode, updateNode, "comments", "attachments");
-                    mergeFieldArray("comments", currentNode, updateNode);
-                    mergeFieldArray("attachments", currentNode, updateNode);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                newArrayNode.add(updateUserTasks.get(i));
-            }
-        }
-
-        newModel.set(USER_TASK_INSTANCES_DOMAIN_ATTRIBUTE, newArrayNode);
-        return;
     }
 
     private void mergeFieldArray(String field, ObjectNode newModel, ObjectNode updateData) {

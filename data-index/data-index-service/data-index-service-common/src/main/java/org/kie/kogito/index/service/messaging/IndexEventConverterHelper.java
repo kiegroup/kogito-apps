@@ -20,13 +20,11 @@ package org.kie.kogito.index.service.messaging;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.Collection;
 
 import org.kie.kogito.event.Converter;
 import org.kie.kogito.event.DataEvent;
 import org.kie.kogito.event.DataEventFactory;
 import org.kie.kogito.event.impl.JacksonCloudEventDataConverter;
-import org.kie.kogito.event.impl.JacksonTypeCloudEventDataConverter;
 import org.kie.kogito.event.process.MultipleProcessInstanceDataEvent;
 import org.kie.kogito.event.process.ProcessDefinitionDataEvent;
 import org.kie.kogito.event.process.ProcessDefinitionEventBody;
@@ -42,27 +40,12 @@ import org.kie.kogito.event.process.ProcessInstanceStateEventBody;
 import org.kie.kogito.event.process.ProcessInstanceVariableDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceVariableEventBody;
 import org.kie.kogito.event.serializer.MultipleProcessDataInstanceConverterFactory;
-import org.kie.kogito.event.usertask.MultipleUserTaskInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceAssignmentDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceAssignmentEventBody;
-import org.kie.kogito.event.usertask.UserTaskInstanceAttachmentDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceAttachmentEventBody;
-import org.kie.kogito.event.usertask.UserTaskInstanceCommentDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceCommentEventBody;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDeadlineDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDeadlineEventBody;
-import org.kie.kogito.event.usertask.UserTaskInstanceStateDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceStateEventBody;
-import org.kie.kogito.event.usertask.UserTaskInstanceVariableDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceVariableEventBody;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
 import org.kie.kogito.index.model.Job;
 import org.kie.kogito.index.service.DataIndexServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.cloudevents.CloudEvent;
@@ -77,13 +60,6 @@ public class IndexEventConverterHelper {
     private Converter<CloudEventData, ProcessInstanceSLAEventBody> slaConverter;
     private Converter<CloudEventData, ProcessInstanceVariableEventBody> varConverter;
     private Converter<CloudEventData, ProcessInstanceStateEventBody> stateConverter;
-    private Converter<CloudEventData, UserTaskInstanceAssignmentEventBody> assignConverter;
-    private Converter<CloudEventData, UserTaskInstanceAttachmentEventBody> attachConverter;
-    private Converter<CloudEventData, UserTaskInstanceCommentEventBody> commentConverter;
-    private Converter<CloudEventData, UserTaskInstanceDeadlineEventBody> deadlineConverter;
-    private Converter<CloudEventData, UserTaskInstanceStateEventBody> taskStateConverter;
-    private Converter<CloudEventData, UserTaskInstanceVariableEventBody> taskVariableConverter;
-    private Converter<CloudEventData, Collection<UserTaskInstanceDataEvent<?>>> taskCollectionConverter;
     private Converter<CloudEventData, ProcessDefinitionEventBody> definitionConverter;
     private ObjectMapper objectMapper;
 
@@ -94,14 +70,6 @@ public class IndexEventConverterHelper {
         this.slaConverter = new JacksonCloudEventDataConverter<>(objectMapper, ProcessInstanceSLAEventBody.class);
         this.varConverter = new JacksonCloudEventDataConverter<>(objectMapper, ProcessInstanceVariableEventBody.class);
         this.stateConverter = new JacksonCloudEventDataConverter<>(objectMapper, ProcessInstanceStateEventBody.class);
-        this.assignConverter = new JacksonCloudEventDataConverter<>(objectMapper, UserTaskInstanceAssignmentEventBody.class);
-        this.attachConverter = new JacksonCloudEventDataConverter<>(objectMapper, UserTaskInstanceAttachmentEventBody.class);
-        this.commentConverter = new JacksonCloudEventDataConverter<>(objectMapper, UserTaskInstanceCommentEventBody.class);
-        this.deadlineConverter = new JacksonCloudEventDataConverter<>(objectMapper, UserTaskInstanceDeadlineEventBody.class);
-        this.taskStateConverter = new JacksonCloudEventDataConverter<>(objectMapper, UserTaskInstanceStateEventBody.class);
-        this.taskVariableConverter = new JacksonCloudEventDataConverter<>(objectMapper, UserTaskInstanceVariableEventBody.class);
-        this.taskCollectionConverter = new JacksonTypeCloudEventDataConverter<>(objectMapper, new TypeReference<Collection<UserTaskInstanceDataEvent<?>>>() {
-        });
         this.definitionConverter = new JacksonCloudEventDataConverter<>(objectMapper, ProcessDefinitionEventBody.class);
 
     }
@@ -109,7 +77,6 @@ public class IndexEventConverterHelper {
     public boolean isIndexable(Type type) {
         return type == ProcessInstanceDataEvent.class
                 || type == ProcessDefinitionDataEvent.class
-                || type == UserTaskInstanceDataEvent.class
                 || type == KogitoJobCloudEvent.class;
     }
 
@@ -119,8 +86,6 @@ public class IndexEventConverterHelper {
                 return buildProcessInstanceDataEventVariant(cloudEvent);
             } else if (type.getTypeName().equals(KogitoJobCloudEvent.class.getTypeName())) {
                 return buildKogitoJobCloudEvent(cloudEvent);
-            } else if (type.getTypeName().equals(UserTaskInstanceDataEvent.class.getTypeName())) {
-                return buildUserTaskInstanceDataEvent(cloudEvent);
             } else if (type.getTypeName().equals(ProcessDefinitionDataEvent.class.getTypeName())) {
                 return buildProcessDefinitionEvent(cloudEvent);
             }
@@ -152,27 +117,6 @@ public class IndexEventConverterHelper {
                 return DataEventFactory.from(new ProcessInstanceVariableDataEvent(), cloudEvent, varConverter);
             default:
                 throw new IllegalArgumentException("Unknown ProcessInstanceDataEvent variant: " + cloudEvent.getType());
-        }
-    }
-
-    private DataEvent<?> buildUserTaskInstanceDataEvent(CloudEvent cloudEvent) throws IOException {
-        switch (cloudEvent.getType()) {
-            case MultipleUserTaskInstanceDataEvent.TYPE:
-                return DataEventFactory.from(new MultipleUserTaskInstanceDataEvent(), cloudEvent, taskCollectionConverter);
-            case "UserTaskInstanceAssignmentDataEvent":
-                return DataEventFactory.from(new UserTaskInstanceAssignmentDataEvent(), cloudEvent, assignConverter);
-            case "UserTaskInstanceAttachmentDataEvent":
-                return DataEventFactory.from(new UserTaskInstanceAttachmentDataEvent(), cloudEvent, attachConverter);
-            case "UserTaskInstanceCommentDataEvent":
-                return DataEventFactory.from(new UserTaskInstanceCommentDataEvent(), cloudEvent, commentConverter);
-            case "UserTaskInstanceDeadlineDataEvent":
-                return DataEventFactory.from(new UserTaskInstanceDeadlineDataEvent(), cloudEvent, deadlineConverter);
-            case "UserTaskInstanceStateDataEvent":
-                return DataEventFactory.from(new UserTaskInstanceStateDataEvent(), cloudEvent, taskStateConverter);
-            case "UserTaskInstanceVariableDataEvent":
-                return DataEventFactory.from(new UserTaskInstanceVariableDataEvent(), cloudEvent, taskVariableConverter);
-            default:
-                throw new IllegalArgumentException("Unknown UserTaskInstanceDataEvent variant: " + cloudEvent.getType());
         }
     }
 
