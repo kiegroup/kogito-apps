@@ -22,7 +22,6 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.kie.kogito.event.DataEvent;
 import org.kie.kogito.event.process.ProcessDefinitionDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
 import org.kie.kogito.index.service.IndexingService;
 import org.slf4j.Logger;
@@ -36,11 +35,9 @@ import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.*;
 import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_JOBS_EVENTS;
 import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_PROCESSINSTANCES_EVENTS;
 import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_PROCESS_DEFINITIONS_EVENTS;
-import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_USERTASKINSTANCES_EVENTS;
 
 @ApplicationScoped
 @IfBuildProperty(name = "kogito.data-index.blocking", stringValue = "true")
@@ -60,15 +57,6 @@ public class BlockingMessagingEventConsumer {
     public void onProcessInstanceEvent(ProcessInstanceDataEvent<?> event) {
         LOGGER.debug("Process instance consumer received ProcessInstanceDataEvent: \n{}", event);
         indexingService.indexProcessInstanceEvent(event);
-        eventPublisher.fire(event);
-    }
-
-    @Incoming(KOGITO_USERTASKINSTANCES_EVENTS)
-    @Blocking
-    @Transactional
-    public void onUserTaskInstanceEvent(UserTaskInstanceDataEvent<?> event) {
-        LOGGER.debug("Task instance received UserTaskInstanceDataEvent \n{}", event);
-        indexingService.indexUserTaskInstanceEvent(event);
         eventPublisher.fire(event);
     }
 

@@ -61,11 +61,6 @@ import static org.kie.kogito.persistence.api.query.QueryFilterFactory.equalTo;
 public abstract class AbstractGraphQLSchemaManager implements GraphQLSchemaManager {
 
     private static final String ID = "id";
-    private static final String USER = "user";
-    private static final String GROUPS = "groups";
-    private static final String TASK_ID = "taskId";
-    private static final String COMMENT_ID = "commentId";
-    private static final String ATTACHMENT_ID = "attachmentId";
 
     private static final String UNABLE_TO_FIND_ERROR_MSG = "Unable to find the instance with %s %s";
 
@@ -96,7 +91,6 @@ public abstract class AbstractGraphQLSchemaManager implements GraphQLSchemaManag
         GraphQLQueryParserRegistry.get().registerParsers(
                 (GraphQLInputObjectType) schema.getType("ProcessDefinitionArgument"),
                 (GraphQLInputObjectType) schema.getType("ProcessInstanceArgument"),
-                (GraphQLInputObjectType) schema.getType("UserTaskInstanceArgument"),
                 (GraphQLInputObjectType) schema.getType("JobArgument"));
     }
 
@@ -126,7 +120,6 @@ public abstract class AbstractGraphQLSchemaManager implements GraphQLSchemaManag
     protected final void addCountQueries(Builder builder) {
         if (supportsCount()) {
             builder.dataFetcher("CountProcessInstances", this::countProcessInstances);
-            builder.dataFetcher("CountUserTaskInstances", this::countUserTaskInstances);
             builder.dataFetcher("CountJobs", this::countJobs);
             builder.dataFetcher("CountProcessDefinitions", this::countProcessDefinitions);
         }
@@ -253,10 +246,6 @@ public abstract class AbstractGraphQLSchemaManager implements GraphQLSchemaManag
         return executeCount(cacheService.getProcessInstanceStorage(), env);
     }
 
-    protected long countUserTaskInstances(DataFetchingEnvironment env) {
-        return executeCount(cacheService.getUserTaskInstanceStorage(), env);
-    }
-
     protected long countJobs(DataFetchingEnvironment env) {
         return executeCount(cacheService.getJobsStorage(), env);
     }
@@ -300,10 +289,6 @@ public abstract class AbstractGraphQLSchemaManager implements GraphQLSchemaManag
             }
         }
         return query;
-    }
-
-    protected Collection<UserTaskInstance> getUserTaskInstancesValues(DataFetchingEnvironment env) {
-        return executeAdvancedQueryForCache(cacheService.getUserTaskInstanceStorage(), env);
     }
 
     protected Collection<Job> getJobsValues(DataFetchingEnvironment env) {
@@ -491,88 +476,4 @@ public abstract class AbstractGraphQLSchemaManager implements GraphQLSchemaManag
         }
         return CompletableFuture.failedFuture(new DataIndexServiceException(format(UNABLE_TO_FIND_ERROR_MSG, ID, id)));
     }
-
-    protected CompletableFuture<String> getUserTaskInstanceSchema(DataFetchingEnvironment env) {
-        UserTaskInstance userTaskInstance = env.getSource();
-        return getDataIndexApiExecutor().getUserTaskSchema(getServiceUrl(userTaskInstance.getEndpoint(), userTaskInstance.getProcessId()),
-                userTaskInstance,
-                env.getArgument(USER),
-                env.getArgument(GROUPS));
-    }
-
-    protected CompletableFuture<String> updateUserTaskInstance(DataFetchingEnvironment env) {
-        UserTaskInstance userTaskInstance = getCacheService().getUserTaskInstanceStorage().get(env.getArgument(TASK_ID));
-        return getDataIndexApiExecutor().updateUserTaskInstance(getServiceUrl(userTaskInstance.getEndpoint(), userTaskInstance.getProcessId()),
-                userTaskInstance,
-                env.getArgument(USER),
-                env.getArgument(GROUPS),
-                env.getArguments());
-    }
-
-    protected CompletableFuture<String> createTaskInstanceComment(DataFetchingEnvironment env) {
-        UserTaskInstance userTaskInstance = getCacheService().getUserTaskInstanceStorage().get(env.getArgument(TASK_ID));
-        return getDataIndexApiExecutor().createUserTaskInstanceComment(getServiceUrl(userTaskInstance.getEndpoint(), userTaskInstance.getProcessId()),
-                userTaskInstance,
-                env.getArgument(USER),
-                env.getArgument(GROUPS),
-                env.getArgument("comment"));
-    }
-
-    protected CompletableFuture<String> createTaskInstanceAttachment(DataFetchingEnvironment env) {
-        UserTaskInstance userTaskInstance = getCacheService().getUserTaskInstanceStorage().get(env.getArgument(TASK_ID));
-        return getDataIndexApiExecutor().createUserTaskInstanceAttachment(getServiceUrl(userTaskInstance.getEndpoint(), userTaskInstance.getProcessId()),
-                userTaskInstance,
-                env.getArgument(USER),
-                env.getArgument(GROUPS),
-                env.getArgument("name"),
-                env.getArgument("uri"));
-    }
-
-    protected CompletableFuture<String> updateUserTaskComment(DataFetchingEnvironment env) {
-        Query<UserTaskInstance> query = getCacheService().getUserTaskInstanceStorage().query();
-        query.filter(singletonList(equalTo("comments.id", env.getArgument(COMMENT_ID))));
-        UserTaskInstance userTaskInstance = query.execute().get(0);
-        return getDataIndexApiExecutor().updateUserTaskInstanceComment(getServiceUrl(userTaskInstance.getEndpoint(), userTaskInstance.getProcessId()),
-                userTaskInstance,
-                env.getArgument(USER),
-                env.getArgument(GROUPS),
-                env.getArgument(COMMENT_ID),
-                env.getArgument("comment"));
-    }
-
-    protected CompletableFuture<String> deleteUserTaskComment(DataFetchingEnvironment env) {
-        Query<UserTaskInstance> query = getCacheService().getUserTaskInstanceStorage().query();
-        query.filter(singletonList(equalTo("comments.id", env.getArgument(COMMENT_ID))));
-        UserTaskInstance userTaskInstance = query.execute().get(0);
-        return getDataIndexApiExecutor().deleteUserTaskInstanceComment(getServiceUrl(userTaskInstance.getEndpoint(), userTaskInstance.getProcessId()),
-                userTaskInstance,
-                env.getArgument(USER),
-                env.getArgument(GROUPS),
-                env.getArgument(COMMENT_ID));
-    }
-
-    protected CompletableFuture<String> updateUserTaskAttachment(DataFetchingEnvironment env) {
-        Query<UserTaskInstance> query = getCacheService().getUserTaskInstanceStorage().query();
-        query.filter(singletonList(equalTo("attachments.id", env.getArgument(ATTACHMENT_ID))));
-        UserTaskInstance userTaskInstance = query.execute().get(0);
-        return getDataIndexApiExecutor().updateUserTaskInstanceAttachment(getServiceUrl(userTaskInstance.getEndpoint(), userTaskInstance.getProcessId()),
-                userTaskInstance,
-                env.getArgument(USER),
-                env.getArgument(GROUPS),
-                env.getArgument(ATTACHMENT_ID),
-                env.getArgument("name"),
-                env.getArgument("uri"));
-    }
-
-    protected CompletableFuture<String> deleteUserTaskAttachment(DataFetchingEnvironment env) {
-        Query<UserTaskInstance> query = getCacheService().getUserTaskInstanceStorage().query();
-        query.filter(singletonList(equalTo("attachments.id", env.getArgument(ATTACHMENT_ID))));
-        UserTaskInstance userTaskInstance = query.execute().get(0);
-        return getDataIndexApiExecutor().deleteUserTaskInstanceAttachment(getServiceUrl(userTaskInstance.getEndpoint(), userTaskInstance.getProcessId()),
-                userTaskInstance,
-                env.getArgument(USER),
-                env.getArgument(GROUPS),
-                env.getArgument(ATTACHMENT_ID));
-    }
-
 }

@@ -67,68 +67,8 @@
     "query": "query ( $ident: String ) { ProcessInstances(where: { updatedBy : { equal : $ident } }) { %s } }",
     "variables": {}
   },
-  "UserTaskInstanceById": {
-    "query": "query ( $id: String ) { UserTaskInstances( where: {  id: {  equal : $id } } ){ %s } }",
-    "variables": {}
-  },
-  "UserTaskInstanceByProcessInstanceId": {
-    "query": "query ( $id: String ) { UserTaskInstances( where: {  processInstanceId: {  equal : $id } } ){ %s } }",
-    "variables": {}
-  },
-  "UserTaskInstanceByIdAndActualOwner": {
-    "query": "query ( $id: String, $actualOwner: String ) { UserTaskInstances( where: {  id: {  equal : $id }, actualOwner: { equal: $actualOwner }, not: { excludedUsers: { contains : $actualOwner } } } ){ %s } }",
-    "variables": {}
-  },
-  "UserTaskInstanceByIdAndProcessId": {
-    "query": "query ( $id: String, $processId: String ) { UserTaskInstances( where: {  id: {  equal : $id }, processId: { equal: $processId } } ){ %s } }",
-    "variables": {}
-  },
-  "UserTaskInstanceByIdNoActualOwner": {
-    "query": "query ( $id: String ) { UserTaskInstances( where: {  id: {  equal : $id }, actualOwner: { isNull: true } } ){ %s } }",
-    "variables": {}
-  },
-  "UserTaskInstanceByIdAndState": {
-    "query": "query ( $id: String, $state: String ) { UserTaskInstances( where: {  id: {  equal : $id }, state: { equal: $state } } ){ %s } }",
-    "variables": {}
-  },
-  "UserTaskInstanceByIdAndStarted": {
-    "query": "query ( $id: String, $started: DateTime ) { UserTaskInstances( where: {  id: {  equal : $id }, started: { lessThanEqual: $started } } ){ %s } }",
-    "variables": {}
-  },
-  "UserTaskInstanceByIdAndCompleted": {
-    "query": "query ( $id: String, $completed: DateTime ) { UserTaskInstances( where: {  id: {  equal : $id }, completed: { greaterThanEqual: $completed } } ){ %s } }",
-    "variables": {}
-  },
-  "UserTaskInstanceByIdAndPotentialGroups": {
-    "query": "query ( $id: String, $potentialGroups: [String!] ) { UserTaskInstances( where: {  id: {  equal : $id }, potentialGroups: { containsAny: $potentialGroups } } ){ %s } }",
-    "variables": {}
-  },
-  "UserTaskInstanceByIdAndPotentialUsers": {
-    "query": "query ( $id: String, $potentialUsers: [String!] ) { UserTaskInstances( where: {  id: {  equal : $id }, potentialUsers: { containsAny: $potentialUsers } } ){ %s } }",
-    "variables": {}
-  },
-  "UserTaskInstanceByIdAndRootProcessInstanceId": {
-    "query": "query ( $id: String, $rootProcessInstanceId: String ) { UserTaskInstances( where: {  id: {  equal : $id }, rootProcessInstanceId: { equal: $rootProcessInstanceId } } ){ %s } }",
-    "variables": {}
-  },
-  "UserTaskInstanceByIdAndRootProcessId": {
-    "query": "query ( $id: String, $rootProcessId: String ) { UserTaskInstances( where: {  id: {  equal : $id }, rootProcessId: { equal: $rootProcessId } } ){ %s } }",
-    "variables": {}
-  },
-  "UserTaskInstanceByIdAndEndpoint": {
-    "query": "query ( $id: String, $endpoint: String ) { UserTaskInstances( where: {  id: {  equal : $id }, endpoint: { equal: $endpoint } } ){ %s } }",
-    "variables": {}
-  },
-  "UserTaskInstanceByIdAndExternalReferenceId": {
-    "query": "query ( $id: String, $externalReferenceId: String ) { UserTaskInstances( where: {  id: {  equal : $id }, externalReferenceId: { equal: $externalReferenceId } } ){ %s } }",
-    "variables": {}
-  },
   "JobById": {
     "query": "query ( $id: String ) { Jobs( where: {  id: {  equal : $id } } ){ %s } }",
-    "variables": {}
-  },
-  "TravelsByUserTaskId": {
-    "query": "query ( $taskId: String ) { Travels ( where: { metadata: { userTasks: { id : { equal : $taskId } } } } ){ id, __typename, flight { flightNumber, arrival, departure }, hotel { name }, traveller { firstName }, metadata { lastUpdate, processInstances { id, processId, processName, rootProcessId, rootProcessInstanceId, parentProcessInstanceId, start, end, lastUpdate, endpoint, serviceUrl }, userTasks { id, description, name, priority, processInstanceId, actualOwner, lastUpdate, state } } } }",
     "variables": {}
   },
   "TravelsByProcessInstanceId": {
@@ -137,14 +77,6 @@
   },
   "TravelsByProcessInstanceIdAndTravellerFirstName": {
     "query": "query ( $id: String, $name: String ) { Travels ( where: { metadata : { processInstances : {  id : { equal : $id } } }, traveller : { firstName : { like : $name } } }){ id, flight { flightNumber, arrival, departure }, hotel { name }, traveller { firstName, email, nationality }, metadata { lastUpdate, processInstances { id, processId, processName, rootProcessId, rootProcessInstanceId, parentProcessInstanceId, start, end, endpoint, serviceUrl, lastUpdate } } } }",
-    "variables": {}
-  },
-  "DealsByTaskId": {
-    "query": "query ( $id: String ) { Deals ( where: { metadata : { userTasks : { id : { equal : $id } } } } ){ id, __typename, name, review, metadata { lastUpdate, userTasks { id, description, state, name, priority, processInstanceId, actualOwner, started, completed, lastUpdate } } } }",
-    "variables": {}
-  },
-  "DealsByTaskIdNoActualOwner": {
-    "query": "query ( $id: String ) { Deals ( where: { metadata : { userTasks : { id : { equal : $id }, actualOwner: { isNull: true } } } } ){ id, __typename, name, review, metadata { lastUpdate, userTasks { id, description, state, name, priority, processInstanceId, actualOwner, started, completed, lastUpdate } } } }",
     "variables": {}
   }
 }

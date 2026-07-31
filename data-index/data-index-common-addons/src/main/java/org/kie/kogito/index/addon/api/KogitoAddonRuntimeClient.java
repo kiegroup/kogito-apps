@@ -38,7 +38,6 @@ import org.kie.kogito.index.model.Node;
 import org.kie.kogito.index.model.ProcessDefinition;
 import org.kie.kogito.index.model.ProcessInstance;
 import org.kie.kogito.index.model.Timer;
-import org.kie.kogito.index.model.UserTaskInstance;
 import org.kie.kogito.index.service.DataIndexServiceException;
 import org.kie.kogito.index.service.KogitoRuntimeCommonClient;
 import org.kie.kogito.index.service.auth.DataIndexAuthTokenReader;
@@ -272,47 +271,6 @@ public class KogitoAddonRuntimeClient extends KogitoRuntimeCommonClient implemen
                         "CANCEL Node instance " + nodeInstanceId + "from ProcessInstance with id: " + processInstance.getId());
             }
         }));
-    }
-
-    @Override
-    public CompletableFuture<String> getUserTaskSchema(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups) {
-        return throwUnsupportedException();
-    }
-
-    @Override
-    public CompletableFuture<String> updateUserTaskInstance(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, Map taskInfo) {
-        return throwUnsupportedException();
-    }
-
-    @Override
-    public CompletableFuture<String> createUserTaskInstanceComment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String commentInfo) {
-        return throwUnsupportedException();
-    }
-
-    @Override
-    public CompletableFuture<String> createUserTaskInstanceAttachment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String name, String uri) {
-        return throwUnsupportedException();
-    }
-
-    @Override
-    public CompletableFuture<String> updateUserTaskInstanceComment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String commentId, String commentInfo) {
-        return throwUnsupportedException();
-    }
-
-    @Override
-    public CompletableFuture<String> deleteUserTaskInstanceComment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String commentId) {
-        return throwUnsupportedException();
-    }
-
-    @Override
-    public CompletableFuture<String> updateUserTaskInstanceAttachment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String attachmentId, String name,
-            String uri) {
-        return throwUnsupportedException();
-    }
-
-    @Override
-    public CompletableFuture<String> deleteUserTaskInstanceAttachment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String attachmentId) {
-        return throwUnsupportedException();
     }
 
     private <T> T executeOnProcessInstance(KogitoProcessId processId, String processInstanceId, Function<org.kie.kogito.process.ProcessInstance<?>, T> supplier) {

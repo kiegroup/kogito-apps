@@ -20,7 +20,6 @@ package org.kie.kogito.index.api;
 
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.kie.api.definition.process.KogitoProcessId;
@@ -29,7 +28,6 @@ import org.kie.kogito.index.model.Node;
 import org.kie.kogito.index.model.ProcessDefinition;
 import org.kie.kogito.index.model.ProcessInstance;
 import org.kie.kogito.index.model.Timer;
-import org.kie.kogito.index.model.UserTaskInstance;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -60,30 +58,6 @@ public interface KogitoRuntimeClient {
     CompletableFuture<String> cancelJob(String serviceURL, Job job);
 
     CompletableFuture<String> rescheduleJob(String serviceURL, Job job, String newJobData);
-
-    CompletableFuture<String> getUserTaskSchema(String serviceURL, UserTaskInstance userTaskInstance, String user,
-            List<String> groups);
-
-    CompletableFuture<String> updateUserTaskInstance(String serviceURL, UserTaskInstance userTaskInstance, String user,
-            List<String> groups, Map taskInfo);
-
-    CompletableFuture<String> createUserTaskInstanceComment(String serviceURL, UserTaskInstance userTaskInstance,
-            String user, List<String> groups, String commentInfo);
-
-    CompletableFuture<String> createUserTaskInstanceAttachment(String serviceURL, UserTaskInstance userTaskInstance,
-            String user, List<String> groups, String name, String uri);
-
-    CompletableFuture<String> updateUserTaskInstanceComment(String serviceURL, UserTaskInstance userTaskInstance, String user,
-            List<String> groups, String commentId, String commentInfo);
-
-    CompletableFuture<String> deleteUserTaskInstanceComment(String serviceURL, UserTaskInstance userTaskInstance, String user,
-            List<String> groups, String commentId);
-
-    CompletableFuture<String> updateUserTaskInstanceAttachment(String serviceURL, UserTaskInstance userTaskInstance, String user,
-            List<String> groups, String attachmentId, String name, String uri);
-
-    CompletableFuture<String> deleteUserTaskInstanceAttachment(String serviceURL, UserTaskInstance userTaskInstance, String user,
-            List<String> groups, String attachmentId);
 
     CompletableFuture<List<Timer>> getProcessInstanceTimers(String serviceUrl, ProcessInstance processInstance);
 

@@ -26,7 +26,6 @@ import org.kie.kogito.event.DataEvent;
 import org.kie.kogito.event.EventPublisher;
 import org.kie.kogito.event.process.ProcessDefinitionDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
 import org.kie.kogito.index.model.Job;
 import org.kie.kogito.index.service.IndexingService;
 import org.slf4j.Logger;
@@ -65,14 +64,6 @@ public class DataIndexEventPublisher implements EventPublisher {
             case "ProcessInstanceStateDataEvent":
             case "ProcessInstanceVariableDataEvent":
                 indexingService.indexProcessInstanceEvent((ProcessInstanceDataEvent<?>) event);
-                break;
-            case "UserTaskInstanceAssignmentDataEvent":
-            case "UserTaskInstanceAttachmentDataEvent":
-            case "UserTaskInstanceCommentDataEvent":
-            case "UserTaskInstanceDeadlineDataEvent":
-            case "UserTaskInstanceStateDataEvent":
-            case "UserTaskInstanceVariableDataEvent":
-                indexingService.indexUserTaskInstanceEvent((UserTaskInstanceDataEvent<?>) event);
                 break;
             case "JobEvent":
                 try {

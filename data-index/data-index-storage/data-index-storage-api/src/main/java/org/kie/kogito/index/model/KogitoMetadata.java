@@ -25,7 +25,6 @@ public class KogitoMetadata {
 
     private ZonedDateTime lastUpdate;
     private List<ProcessInstanceMeta> processInstances;
-    private List<UserTaskInstanceMeta> userTasks;
 
     public ZonedDateTime getLastUpdate() {
         return lastUpdate;
@@ -43,20 +42,11 @@ public class KogitoMetadata {
         this.processInstances = processInstances;
     }
 
-    public List<UserTaskInstanceMeta> getUserTasks() {
-        return userTasks;
-    }
-
-    public void setUserTasks(List<UserTaskInstanceMeta> userTasks) {
-        this.userTasks = userTasks;
-    }
-
     @Override
     public String toString() {
         return "KogitoMeta{" +
                 "lastUpdate=" + lastUpdate +
                 ", processInstances=" + processInstances +
-                ", userTasks=" + userTasks +
                 '}';
     }
 }

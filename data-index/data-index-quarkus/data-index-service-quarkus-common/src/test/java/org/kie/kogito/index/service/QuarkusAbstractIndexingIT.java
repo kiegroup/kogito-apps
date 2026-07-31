@@ -20,7 +20,6 @@ package org.kie.kogito.index.service;
 
 import org.kie.kogito.event.process.ProcessDefinitionDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
 
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
@@ -31,7 +30,6 @@ import jakarta.inject.Inject;
 import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_JOBS_EVENTS;
 import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_PROCESSINSTANCES_EVENTS;
 import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_PROCESS_DEFINITIONS_EVENTS;
-import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_USERTASKINSTANCES_EVENTS;
 
 public abstract class QuarkusAbstractIndexingIT extends AbstractIndexingServiceIT {
 
@@ -45,10 +43,6 @@ public abstract class QuarkusAbstractIndexingIT extends AbstractIndexingServiceI
 
     protected void indexProcessCloudEvent(ProcessInstanceDataEvent<?> event) {
         connector.source(KOGITO_PROCESSINSTANCES_EVENTS).send(event);
-    }
-
-    protected void indexUserTaskCloudEvent(UserTaskInstanceDataEvent<?> event) {
-        connector.source(KOGITO_USERTASKINSTANCES_EVENTS).send(event);
     }
 
     protected void indexJobCloudEvent(KogitoJobCloudEvent event) {

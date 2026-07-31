@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.kie.api.definition.process.KogitoProcessId;
@@ -33,7 +34,6 @@ import org.kie.kogito.index.model.*;
 import org.kie.kogito.index.service.DataIndexServiceException;
 import org.kie.kogito.index.service.KogitoRuntimeCommonClient;
 import org.kie.kogito.index.service.auth.DataIndexAuthTokenReader;
-import org.kie.kogito.usertask.model.CommentInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
@@ -50,6 +49,7 @@ import io.vertx.ext.web.client.WebClient;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 
 import static java.lang.String.format;
@@ -60,30 +60,33 @@ class KogitoRuntimeClientImpl extends KogitoRuntimeCommonClient implements Kogit
     public static final String ABORT_PROCESS_INSTANCE_PATH = "/management/processes/%s/instances/%s";
     public static final String RETRY_PROCESS_INSTANCE_PATH = "/management/processes/%s/instances/%s/retrigger";
     public static final String SKIP_PROCESS_INSTANCE_PATH = "/management/processes/%s/instances/%s/skip";
-    public static final String GET_PROCESS_INSTANCE_DIAGRAM_PATH = "/svg/processes/%s/instances/%s";
     public static final String GET_PROCESS_INSTANCE_SOURCE_PATH = "/management/processes/%s/source";
-    public static final String GET_PROCESS_INSTANCE_SOURCE_PATH_VERSION = "/management/processes/%s/%s/source";
     public static final String GET_PROCESS_INSTANCE_NODE_DEFINITIONS_PATH = "/management/processes/%s/nodes";
-    public static final String GET_PROCESS_INSTANCE_NODE_DEFINITIONS_VERSION_PATH = "/management/processes/%s/%s/nodes";
     public static final String GET_PROCESS_INSTANCE_TIMERS_PATH = "/management/processes/%s/instances/%s/timers";
-
     public static final String UPDATE_VARIABLES_PROCESS_INSTANCE_PATH = "/%s/%s";
-    public static final String TRIGGER_NODE_INSTANCE_PATH = "/management/processes/%s/instances/%s/nodes/%s"; //node def
-    public static final String RETRIGGER_NODE_INSTANCE_PATH = "/management/processes/%s/instances/%s/nodeInstances/%s"; // nodeInstance Id
-    public static final String CANCEL_NODE_INSTANCE_PATH = "/management/processes/%s/instances/%s/nodeInstances/%s"; // nodeInstance Id
+    public static final String TRIGGER_NODE_INSTANCE_PATH = "/management/processes/%s/instances/%s/nodes/%s";
+    public static final String RETRIGGER_NODE_INSTANCE_PATH = "/management/processes/%s/instances/%s/nodeInstances/%s";
+    public static final String CANCEL_NODE_INSTANCE_PATH = "/management/processes/%s/instances/%s/nodeInstances/%s";
     public static final String UPDATE_NODE_INSTANCE_SLA_PATH = "/management/processes/%s/instances/%s/nodeInstances/%s/sla";
     public static final String UPDATE_PROCESS_INSTANCE_SLA_PATH = "/management/processes/%s/instances/%s/sla";
 
-    public static final String GET_TASK_SCHEMA_PATH = "/%s/%s/%s/%s/schema";
-    public static final String UPDATE_USER_TASK_INSTANCE_PATH = "/management/usertasks/%s";
+    public static final String GET_PROCESS_INSTANCE_DIAGRAM_PATH = "/svg/processes/%s/instances/%s";
 
-    public static final String CREATE_USER_TASK_INSTANCE_COMMENT_PATH = "/usertasks/instance/%s/comments";
-    public static final String UPDATE_USER_TASK_INSTANCE_COMMENT_PATH = "/usertasks/instance/%s/comments/%s";
-    public static final String DELETE_USER_TASK_INSTANCE_COMMENT_PATH = "/usertasks/instance/%s/comments/%s";
+    private Map<String, Boolean> includeVersionMap = new ConcurrentHashMap<>();
 
-    public static final String CREATE_USER_TASK_INSTANCE_ATTACHMENT_PATH = "/usertasks/instance/%s/attachments";
-    public static final String UPDATE_USER_TASK_INSTANCE_ATTACHMENT_PATH = "/usertasks/instance/%s/attachments/%s";
-    public static final String DELETE_USER_TASK_INSTANCE_ATTACHMENT_PATH = "/usertasks/instance/%s/attachments/%s";
+    private boolean includeVersion(String serviceURI, String processId) {
+        return includeVersionMap.computeIfAbsent(serviceURI, s -> supportVersion(s, processId));
+
+    }
+
+    private boolean supportVersion(String uri, String processId) {
+        try {
+            HttpRequest<Buffer> response = getWebClient(uri).head(processId);
+            return response.headers().contains("supportVersion");
+        } catch (WebApplicationException ex) {
+            return false;
+        }
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KogitoRuntimeClientImpl.class);
 
@@ -99,7 +102,8 @@ class KogitoRuntimeClientImpl extends KogitoRuntimeCommonClient implements Kogit
     @Override
     public CompletableFuture<JsonNode> executeProcessInstance(ProcessDefinition definition, ExecuteArgs args) {
         CompletableFuture<JsonNode> future = new CompletableFuture<>();
-        HttpRequest<Buffer> request = getWebClient(CommonUtils.getServiceUrl(definition.getEndpoint(), definition.getId())).post("/" + definition.getId());
+        String endPoint = CommonUtils.getServiceUrl(definition.getEndpoint(), definition.getId());
+        HttpRequest<Buffer> request = getWebClient(endPoint).post("/" + (includeVersion(endPoint, definition.getId()) ? definition.getKogitoProcessId().toString("/") : definition.getId()));
         if (args.businessKey() != null) {
             request.addQueryParam("businessKey", args.businessKey());
         }
@@ -110,164 +114,98 @@ class KogitoRuntimeClientImpl extends KogitoRuntimeCommonClient implements Kogit
 
     @Override
     public CompletableFuture<String> abortProcessInstance(String serviceURL, ProcessInstance processInstance) {
-        String requestURI = format(ABORT_PROCESS_INSTANCE_PATH, processInstance.getProcessId(), processInstance.getId());
+        String requestURI = format(ABORT_PROCESS_INSTANCE_PATH,
+                includeVersion(serviceURL, processInstance.getProcessId()) ? processInstance.getKogitoProcessId().toString("/") : processInstance.getProcessId(), processInstance.getId());
         return sendDeleteClientRequest(getWebClient(serviceURL), requestURI, "ABORT ProcessInstance with id: " + processInstance.getId());
     }
 
     @Override
     public CompletableFuture<String> retryProcessInstance(String serviceURL, ProcessInstance processInstance) {
-        String requestURI = format(RETRY_PROCESS_INSTANCE_PATH, processInstance.getProcessId(), processInstance.getId());
+        String requestURI = format(RETRY_PROCESS_INSTANCE_PATH,
+                includeVersion(serviceURL, processInstance.getProcessId()) ? processInstance.getKogitoProcessId().toString("/") : processInstance.getProcessId(), processInstance.getId());
         return sendPostClientRequest(getWebClient(serviceURL), requestURI, "RETRY ProcessInstance with id: " + processInstance.getId());
     }
 
     @Override
     public CompletableFuture<String> skipProcessInstance(String serviceURL, ProcessInstance processInstance) {
-        String requestURI = format(SKIP_PROCESS_INSTANCE_PATH, processInstance.getProcessId(), processInstance.getId());
+        String requestURI = format(SKIP_PROCESS_INSTANCE_PATH,
+                includeVersion(serviceURL, processInstance.getProcessId()) ? processInstance.getKogitoProcessId().toString("/") : processInstance.getProcessId(), processInstance.getId());
         return sendPostClientRequest(getWebClient(serviceURL), requestURI, "SKIP ProcessInstance with id: " + processInstance.getId());
     }
 
     @Override
     public CompletableFuture<String> updateProcessInstanceVariables(String serviceURL, ProcessInstance processInstance, String variables) {
-        String requestURI = format(UPDATE_VARIABLES_PROCESS_INSTANCE_PATH, processInstance.getProcessId(), processInstance.getId());
+        String requestURI = format(UPDATE_VARIABLES_PROCESS_INSTANCE_PATH,
+                includeVersion(serviceURL, processInstance.getProcessId()) ? processInstance.getKogitoProcessId().toString("/") : processInstance.getProcessId(), processInstance.getId());
         return sendJSONPutClientRequest(getWebClient(serviceURL), requestURI, "UPDATE VARIABLES of ProcessInstance with id: " + processInstance.getId(), variables);
     }
 
     @Override
     public CompletableFuture<String> rescheduleNodeInstanceSla(String serviceURL, ProcessInstance processInstance, String nodeInstanceId, ZonedDateTime expirationTime) {
-        String requestURI = format(UPDATE_NODE_INSTANCE_SLA_PATH, processInstance.getProcessId(), processInstance.getId(), nodeInstanceId);
+        String requestURI =
+                format(UPDATE_NODE_INSTANCE_SLA_PATH, includeVersion(serviceURL, processInstance.getProcessId()) ? processInstance.getKogitoProcessId().toString("/") : processInstance.getProcessId(),
+                        processInstance.getId(), nodeInstanceId);
         return sendPatchClientRequest(getWebClient(serviceURL), requestURI, "Update SLA of NodesInstance with id: " + nodeInstanceId, new JsonObject(expirationTime.toString()));
     }
 
     @Override
     public CompletableFuture<String> rescheduleProcessInstanceSla(String serviceURL, ProcessInstance processInstance, ZonedDateTime expirationTime) {
-        String requestURI = format(UPDATE_PROCESS_INSTANCE_SLA_PATH, processInstance.getProcessId(), processInstance.getId());
+        String requestURI = format(UPDATE_PROCESS_INSTANCE_SLA_PATH,
+                includeVersion(serviceURL, processInstance.getProcessId()) ? processInstance.getKogitoProcessId().toString("/") : processInstance.getProcessId(), processInstance.getId());
         return sendPatchClientRequest(getWebClient(serviceURL), requestURI, "Update SLA of ProcessInstance with id: " + processInstance.getId(), new JsonObject(expirationTime.toString()));
     }
 
     @Override
     public CompletableFuture<String> getProcessInstanceDiagram(String serviceURL, ProcessInstance processInstance) {
-        String requestURI = format(GET_PROCESS_INSTANCE_DIAGRAM_PATH, processInstance.getProcessId(), processInstance.getId());
+        String requestURI = format(GET_PROCESS_INSTANCE_DIAGRAM_PATH,
+                includeVersion(serviceURL, processInstance.getProcessId()) ? processInstance.getKogitoProcessId().toString("/") : processInstance.getProcessId(), processInstance.getId());
         return sendGetClientRequest(getWebClient(serviceURL), requestURI, "Get Process Instance diagram with id: " + processInstance.getId(), null);
     }
 
     @Override
     public CompletableFuture<List<Timer>> getProcessInstanceTimers(String serviceURL, ProcessInstance processInstance) {
-        String requestURI = format(GET_PROCESS_INSTANCE_TIMERS_PATH, processInstance.getProcessId(), processInstance.getId());
+        String requestURI = format(GET_PROCESS_INSTANCE_TIMERS_PATH,
+                includeVersion(serviceURL, processInstance.getProcessId()) ? processInstance.getKogitoProcessId().toString("/") : processInstance.getProcessId(), processInstance.getId());
         return sendGetClientRequest(getWebClient(serviceURL), requestURI, "Get Process Instance Timers: " + processInstance.getId(), List.class);
     }
 
     @Override
     public CompletableFuture<String> getProcessDefinitionSourceFileContent(String serviceURL, KogitoProcessId processId) {
-        String requestURI = processId.version() == null ? format(GET_PROCESS_INSTANCE_SOURCE_PATH, processId) : format(GET_PROCESS_INSTANCE_SOURCE_PATH_VERSION, processId.id(), processId.version());
-        return sendGetClientRequest(getWebClient(serviceURL), requestURI, "Get Process Instance source file with processId: " +
-                processId, null);
+        String requestURI = format(GET_PROCESS_INSTANCE_SOURCE_PATH, includeVersion(serviceURL, processId.id()) ? processId.toString("/") : processId.id());
+        return sendGetClientRequest(getWebClient(serviceURL), requestURI, "Get Process Instance source file with processId: " + processId, null);
     }
 
     @Override
     public CompletableFuture<List<Node>> getProcessDefinitionNodes(String serviceURL, KogitoProcessId processId) {
-        String requestURI = processId.version() == null ? format(GET_PROCESS_INSTANCE_NODE_DEFINITIONS_PATH, processId.id())
-                : format(GET_PROCESS_INSTANCE_NODE_DEFINITIONS_VERSION_PATH, processId.id(), processId.version());
+        String requestURI = format(GET_PROCESS_INSTANCE_NODE_DEFINITIONS_PATH, includeVersion(serviceURL, processId.id()) ? processId.toString("/") : processId.id());
         return sendGetClientRequest(getWebClient(serviceURL), requestURI, "Get Process available nodes with id: " + processId, List.class);
     }
 
     @Override
     public CompletableFuture<String> triggerNodeInstance(String serviceURL, ProcessInstance processInstance, String nodeDefinitionId) {
-        String requestURI = format(TRIGGER_NODE_INSTANCE_PATH, processInstance.getProcessId(), processInstance.getId(), nodeDefinitionId);
+        String requestURI =
+                format(TRIGGER_NODE_INSTANCE_PATH, includeVersion(serviceURL, processInstance.getProcessId()) ? processInstance.getKogitoProcessId().toString("/") : processInstance.getProcessId(),
+                        processInstance.getId(), nodeDefinitionId);
         return sendPostClientRequest(getWebClient(serviceURL), requestURI,
                 "Trigger Node " + nodeDefinitionId + FROM_PROCESS_INSTANCE_WITH_ID + processInstance.getId());
     }
 
     @Override
     public CompletableFuture<String> retriggerNodeInstance(String serviceURL, ProcessInstance processInstance, String nodeInstanceId) {
-        String requestURI = format(RETRIGGER_NODE_INSTANCE_PATH, processInstance.getProcessId(), processInstance.getId(), nodeInstanceId);
+        String requestURI =
+                format(RETRIGGER_NODE_INSTANCE_PATH, includeVersion(serviceURL, processInstance.getProcessId()) ? processInstance.getKogitoProcessId().toString("/") : processInstance.getProcessId(),
+                        processInstance.getId(), nodeInstanceId);
         return sendPostClientRequest(getWebClient(serviceURL), requestURI,
                 "Retrigger NodeInstance " + nodeInstanceId + FROM_PROCESS_INSTANCE_WITH_ID + processInstance.getId());
     }
 
     @Override
     public CompletableFuture<String> cancelNodeInstance(String serviceURL, ProcessInstance processInstance, String nodeInstanceId) {
-        String requestURI = format(CANCEL_NODE_INSTANCE_PATH, processInstance.getProcessId(), processInstance.getId(), nodeInstanceId);
+        String requestURI =
+                format(CANCEL_NODE_INSTANCE_PATH, includeVersion(serviceURL, processInstance.getProcessId()) ? processInstance.getKogitoProcessId().toString("/") : processInstance.getProcessId(),
+                        processInstance.getId(), nodeInstanceId);
         return sendDeleteClientRequest(getWebClient(serviceURL), requestURI,
                 "Cancel NodeInstance " + nodeInstanceId + FROM_PROCESS_INSTANCE_WITH_ID + processInstance.getId());
-    }
-
-    @Override
-    public CompletableFuture<String> getUserTaskSchema(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups) {
-        String requestURI = format(GET_TASK_SCHEMA_PATH, userTaskInstance.getProcessId(), userTaskInstance.getProcessInstanceId(),
-                userTaskInstance.getName(), userTaskInstance.getExternalReferenceId()) + "?" + getUserGroupsURIParameter(user, groups);
-        LOGGER.trace("get user task schema service {} and URI {}", serviceURL, requestURI);
-        return sendGetClientRequest(getWebClient(serviceURL), requestURI,
-                "Get User Task schema for task:" + userTaskInstance.getName() + " with id: " + userTaskInstance.getId(),
-                null);
-    }
-
-    @Override
-    public CompletableFuture<String> updateUserTaskInstance(String serviceURL, UserTaskInstance userTaskInstance, String user,
-            List<String> groups, Map taskInfo) {
-        String requestURI = format(UPDATE_USER_TASK_INSTANCE_PATH, userTaskInstance.getId()) + "?" + getUserGroupsURIParameter(user, groups);
-        LOGGER.trace("Send request to {}", requestURI);
-        return sendPatchClientRequest(getWebClient(serviceURL), requestURI,
-                "Update user task instance: " + userTaskInstance.getName() + " with id: " + userTaskInstance.getId(),
-                new JsonObject(taskInfo));
-    }
-
-    @Override
-    public CompletableFuture<String> createUserTaskInstanceComment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String commentInfo) {
-        String requestURI = format(CREATE_USER_TASK_INSTANCE_COMMENT_PATH, userTaskInstance.getId()) + "?" + getUserGroupsURIParameter(user, groups);
-        return sendPostWithBodyClientRequest(getWebClient(serviceURL), requestURI,
-                "Adding comment to  UserTask:" + userTaskInstance.getName() + " with id: " + userTaskInstance.getId(),
-                Json.encode(new CommentInfo(commentInfo)), MediaType.APPLICATION_JSON);
-    }
-
-    @Override
-    public CompletableFuture<String> updateUserTaskInstanceComment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String commentId, String commentInfo) {
-        String requestURI = format(UPDATE_USER_TASK_INSTANCE_COMMENT_PATH, userTaskInstance.getId(), commentId) + "?" + getUserGroupsURIParameter(user, groups);
-        return sendPutClientRequest(getWebClient(serviceURL),
-                requestURI,
-                "Update UserTask: " + userTaskInstance.getName() + " comment:" + commentId + "  with taskid: " + userTaskInstance.getId(),
-                Json.encode(new CommentInfo(commentInfo)), MediaType.APPLICATION_JSON);
-    }
-
-    @Override
-    public CompletableFuture<String> deleteUserTaskInstanceComment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String commentId) {
-        String requestURI = format(DELETE_USER_TASK_INSTANCE_COMMENT_PATH, userTaskInstance.getId(), commentId) + "?" + getUserGroupsURIParameter(user, groups);
-        return sendDeleteClientRequest(getWebClient(serviceURL), requestURI,
-                "Delete comment : " + commentId + "of Task: " + userTaskInstance.getName() + "  with taskid: " + userTaskInstance.getId());
-    }
-
-    @Override
-    public CompletableFuture<String> createUserTaskInstanceAttachment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String name, String uri) {
-        String requestURI = format(CREATE_USER_TASK_INSTANCE_ATTACHMENT_PATH, userTaskInstance.getId()) + "?" + getUserGroupsURIParameter(user, groups);
-        return sendPostWithBodyClientRequest(getWebClient(serviceURL), requestURI,
-                "Adding attachment to  UserTask:" + userTaskInstance.getName() + " with id: " + userTaskInstance.getId(),
-                "{ \"name\": \"" + name + "\", \"uri\": \"" + uri + "\" }", MediaType.APPLICATION_JSON);
-    }
-
-    @Override
-    public CompletableFuture<String> updateUserTaskInstanceAttachment(String serviceURL, UserTaskInstance userTaskInstance, String user,
-            List<String> groups, String attachmentId, String name, String uri) {
-        String requestURI = format(UPDATE_USER_TASK_INSTANCE_ATTACHMENT_PATH, userTaskInstance.getId(), attachmentId) + "?" + getUserGroupsURIParameter(user, groups);
-        return sendJSONPutClientRequest(getWebClient(serviceURL),
-                requestURI,
-                "Update UserTask: " + userTaskInstance.getName() + " attachment:" + attachmentId +
-                        " with taskid: " + userTaskInstance.getId() + "with: " + name + " and info:" + uri,
-                "{ \"name\": \"" + name + "\", \"uri\": \"" + uri + "\" }");
-    }
-
-    @Override
-    public CompletableFuture<String> deleteUserTaskInstanceAttachment(String serviceURL, UserTaskInstance userTaskInstance, String user, List<String> groups, String attachmentId) {
-        String requestURI = format(DELETE_USER_TASK_INSTANCE_ATTACHMENT_PATH, userTaskInstance.getId(), attachmentId) + "?" + getUserGroupsURIParameter(user, groups);
-        return sendDeleteClientRequest(getWebClient(serviceURL), requestURI,
-                "Delete attachment : " + attachmentId + "of Task: " + userTaskInstance.getName() + "  with taskid: " + userTaskInstance.getId());
-    }
-
-    private String getUserGroupsURIParameter(String user, List<String> groups) {
-        final StringBuilder builder = new StringBuilder();
-        if (user != null && groups != null) {
-            builder.append("user=" + user);
-            groups.stream().forEach(group -> builder.append("&group=" + group));
-        }
-        return builder.toString();
     }
 
     protected CompletableFuture sendPostWithBodyClientRequest(WebClient webClient, String requestURI, String logMessage, String body, String contentType) {

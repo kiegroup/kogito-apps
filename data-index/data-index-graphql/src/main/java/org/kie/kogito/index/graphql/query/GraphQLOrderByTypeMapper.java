@@ -39,7 +39,6 @@ import graphql.schema.GraphQLTypeReference;
 
 import static graphql.schema.GraphQLInputObjectField.newInputObjectField;
 import static org.kie.kogito.index.storage.Constants.PROCESS_INSTANCES_DOMAIN_ATTRIBUTE;
-import static org.kie.kogito.index.storage.Constants.USER_TASK_INSTANCES_DOMAIN_ATTRIBUTE;
 
 public class GraphQLOrderByTypeMapper extends AbstractInputObjectTypeMapper {
 
@@ -60,7 +59,6 @@ public class GraphQLOrderByTypeMapper extends AbstractInputObjectTypeMapper {
         return domain -> domain.getFieldDefinitions().stream()
                 .filter(field -> !(field.getType() instanceof GraphQLList))
                 .filter(field -> !PROCESS_INSTANCES_DOMAIN_ATTRIBUTE.equals(field.getName()))
-                .filter(field -> !USER_TASK_INSTANCES_DOMAIN_ATTRIBUTE.equals(field.getName()))
                 .filter(field -> !"id".equals(field.getName()))
                 .map(field -> {
                     LOGGER.debug("GraphQL mapping field: {}", field.getName());

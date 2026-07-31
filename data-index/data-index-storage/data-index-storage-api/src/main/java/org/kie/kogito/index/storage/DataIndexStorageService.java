@@ -33,8 +33,6 @@ public interface DataIndexStorageService {
 
     ProcessInstanceStorage getProcessInstanceStorage();
 
-    UserTaskInstanceStorage getUserTaskInstanceStorage();
-
     JobInstanceStorage getJobsStorage();
 
     Storage<String, ObjectNode> getDomainModelCache(String processId);

@@ -51,7 +51,6 @@ public abstract class AbstractDomainMessagingConsumerIT {
         protobufService.registerProtoBufferType(getTestProtobufFileContent());
         cacheService.getProcessDefinitionStorage().clear();
         cacheService.getProcessInstanceStorage().clear();
-        cacheService.getUserTaskInstanceStorage().clear();
         if (cacheService.getDomainModelCache("travels") != null) {
             cacheService.getDomainModelCache("travels").clear();
         }
@@ -61,7 +60,6 @@ public abstract class AbstractDomainMessagingConsumerIT {
     void close() {
         cacheService.getProcessDefinitionStorage().clear();
         cacheService.getProcessInstanceStorage().clear();
-        cacheService.getUserTaskInstanceStorage().clear();
         if (cacheService.getDomainModelCache("travels") != null) {
             cacheService.getDomainModelCache("travels").clear();
         }
@@ -87,29 +85,6 @@ public abstract class AbstractDomainMessagingConsumerIT {
                         .body("data.Travels[0].id", is("2308e23d-9998-47e9-a772-a078cf5b891b"))
                         .body("data.Travels[0].metadata.processInstances[0].id", is(processInstanceId)));
     }
-
-    @Test
-    void testUserTaskInstanceEvent() throws Exception {
-        sendUserTaskInstanceEvent();
-
-        String taskId = "45fae435-b098-4f27-97cf-a0c107072e8b";
-
-        given().contentType(ContentType.JSON).body("{ \"query\" : \"{ Travels { id } }\" }")
-                .when().post("/graphql")
-                .then().log().ifValidationFails().statusCode(200)
-                .body("data.Travels", isA(Collection.class));
-
-        await()
-                .atMost(timeout)
-                .untilAsserted(() -> given().contentType(ContentType.JSON)
-                        .body("{ \"query\" : \"{ Travels { id, metadata { userTasks { id } } } }\" }")
-                        .when().post("/graphql")
-                        .then().log().ifValidationFails().statusCode(200)
-                        .body("data.Travels[0].id", is("2308e23d-9998-47e9-a772-a078cf5b891b"))
-                        .body("data.Travels[0].metadata.userTasks[0].id", is(taskId)));
-    }
-
-    protected abstract void sendUserTaskInstanceEvent() throws Exception;
 
     protected abstract void sendProcessInstanceEvent() throws Exception;
 

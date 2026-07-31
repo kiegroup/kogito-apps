@@ -26,8 +26,6 @@ import org.kie.kogito.event.process.KogitoMarshallEventSupport;
 import org.kie.kogito.event.process.MultipleProcessInstanceDataEvent;
 import org.kie.kogito.event.process.ProcessDefinitionDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
-import org.kie.kogito.event.usertask.MultipleUserTaskInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
 import org.kie.kogito.index.json.JsonUtils;
 import org.kie.kogito.index.model.ProcessInstanceState;
@@ -40,10 +38,8 @@ import jakarta.inject.Inject;
 import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_JOBS_EVENTS;
 import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_PROCESSINSTANCES_EVENTS;
 import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_PROCESS_DEFINITIONS_EVENTS;
-import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_USERTASKINSTANCES_EVENTS;
 import static org.kie.kogito.index.test.TestUtils.getJobCloudEvent;
 import static org.kie.kogito.index.test.TestUtils.getProcessCloudEvent;
-import static org.kie.kogito.index.test.TestUtils.getUserTaskCloudEvent;
 import static org.kie.kogito.index.test.TestUtils.readFileContent;
 
 public abstract class AbstractMessagingHttpConsumerIT extends AbstractMessagingConsumerIT {
@@ -51,12 +47,6 @@ public abstract class AbstractMessagingHttpConsumerIT extends AbstractMessagingC
     @Inject
     @Any
     public InMemoryConnector connector;
-
-    protected void sendUserTaskInstanceEvent() throws Exception {
-        UserTaskInstanceDataEvent<?> event = getUserTaskCloudEvent("45fae435-b098-4f27-97cf-a0c107072e8b", "travels",
-                "2308e23d-9998-47e9-a772-a078cf5b891b", null, null, "Completed");
-        connector.source(KOGITO_USERTASKINSTANCES_EVENTS).send(event);
-    }
 
     protected void sendProcessInstanceEvent() throws Exception {
         ProcessInstanceDataEvent<?> event = getProcessCloudEvent("travels", "2308e23d-9998-47e9-a772-a078cf5b891b",
@@ -81,14 +71,6 @@ public abstract class AbstractMessagingHttpConsumerIT extends AbstractMessagingC
                 getProcessCloudEvent("travels", "processId-UUID1", ProcessInstanceState.ACTIVE, null, null, null, "user1"),
                 getProcessCloudEvent("travels", "processId-UUID2", ProcessInstanceState.ACTIVE, null, null, null, "user2"));
         connector.source(KOGITO_PROCESSINSTANCES_EVENTS).send(new MultipleProcessInstanceDataEvent(URI.create("test"), events));
-    }
-
-    @Override
-    protected void sendUserTaskInstanceEventCollection() throws Exception {
-        Collection<UserTaskInstanceDataEvent<?>> events = List.of(
-                getUserTaskCloudEvent("taskId-UUID1", "travels", "processId-UUID1", null, null, "IN_PROGRESS"),
-                getUserTaskCloudEvent("taskId-UUID2", "travels", "processId-UUID1", null, null, "COMPLETED"));
-        connector.source(KOGITO_USERTASKINSTANCES_EVENTS).send(new MultipleUserTaskInstanceDataEvent(URI.create("test"), events));
     }
 
     @Override

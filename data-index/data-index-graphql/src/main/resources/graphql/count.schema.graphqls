@@ -1,6 +1,5 @@
 extend type Query {
     CountProcessInstances(where: ProcessInstanceArgument): Int
-    CountUserTaskInstances(where: UserTaskInstanceArgument): Int
     CountJobs(where: JobArgument): Int
     CountProcessDefinitions(where: ProcessDefinitionArgument): Int
 }

@@ -53,8 +53,6 @@ import org.kie.kogito.event.usertask.UserTaskInstanceEventMetadata;
 import org.kie.kogito.event.usertask.UserTaskInstanceStateDataEvent;
 import org.kie.kogito.event.usertask.UserTaskInstanceStateEventBody;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
-import org.kie.kogito.index.model.Attachment;
-import org.kie.kogito.index.model.Comment;
 import org.kie.kogito.index.model.Job;
 import org.kie.kogito.index.model.Milestone;
 import org.kie.kogito.index.model.MilestoneStatus;
@@ -63,7 +61,6 @@ import org.kie.kogito.index.model.ProcessDefinition;
 import org.kie.kogito.index.model.ProcessInstance;
 import org.kie.kogito.index.model.ProcessInstanceError;
 import org.kie.kogito.index.model.ProcessInstanceState;
-import org.kie.kogito.index.model.UserTaskInstance;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -409,29 +406,4 @@ public final class TestUtils {
         return job;
     }
 
-    public static UserTaskInstance getUserTaskInstance(String taskId, String processId, String processInstanceId, String rootProcessInstanceId, String rootProcessId, String state,
-            String actualOwner) {
-        UserTaskInstance task = new UserTaskInstance();
-        task.setId(taskId);
-        task.setProcessInstanceId(processInstanceId);
-        task.setProcessId(processId);
-        task.setRootProcessId(rootProcessId);
-        task.setRootProcessInstanceId(rootProcessInstanceId);
-        task.setName("TaskName");
-        task.setDescription("TaskDescription");
-        task.setState(state);
-        task.setPriority("High");
-        task.setStarted(ZonedDateTime.now());
-        task.setCompleted(ZonedDateTime.now().plus(1, ChronoUnit.HOURS));
-        task.setActualOwner(actualOwner);
-        task.setAdminUsers(singleton("kogito"));
-        task.setAdminGroups(singleton("admin"));
-        task.setExcludedUsers(singleton("excluded"));
-        task.setPotentialUsers(singleton("potentialUser"));
-        task.setPotentialGroups(singleton("potentialGroup"));
-        task.setComments(List.of(Comment.builder().id("commentId" + taskId).content("Comment 1").updatedBy("kogito").build()));
-        task.setAttachments(List.of(Attachment.builder().id("attachmentId" + taskId).content("http://linltodoc.com/1").name("doc1").updatedBy("kogito").build()));
-        task.setExternalReferenceId("testExternalReferenceId");
-        return task;
-    }
 }

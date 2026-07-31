@@ -22,7 +22,6 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.kie.kogito.event.DataEvent;
 import org.kie.kogito.event.process.ProcessDefinitionDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
 import org.kie.kogito.index.service.IndexingService;
 import org.slf4j.Logger;
@@ -43,7 +42,6 @@ public class ReactiveMessagingEventConsumer {
 
     public static final String KOGITO_PROCESSINSTANCES_EVENTS = "kogito-processinstances-events";
     public static final String KOGITO_PROCESS_DEFINITIONS_EVENTS = "kogito-processdefinitions-events";
-    public static final String KOGITO_USERTASKINSTANCES_EVENTS = "kogito-usertaskinstances-events";
     public static final String KOGITO_JOBS_EVENTS = "kogito-jobs-events";
 
     @Inject
@@ -60,17 +58,6 @@ public class ReactiveMessagingEventConsumer {
                 .invoke(eventPublisher::fire)
                 .onFailure()
                 .invoke(t -> LOGGER.error("Error processing process instance ProcessInstanceDataEvent: {}", t.getMessage(), t))
-                .onItem().ignore().andContinueWithNull();
-    }
-
-    @Incoming(KOGITO_USERTASKINSTANCES_EVENTS)
-    public Uni<Void> onUserTaskInstanceEvent(UserTaskInstanceDataEvent<?> event) {
-        LOGGER.debug("Task instance received UserTaskInstanceDataEvent \n{}", event);
-        return Uni.createFrom().item(event)
-                .invoke(indexingService::indexUserTaskInstanceEvent)
-                .invoke(eventPublisher::fire)
-                .onFailure()
-                .invoke(t -> LOGGER.error("Error processing task instance UserTaskInstanceDataEvent: {}", t.getMessage(), t))
                 .onItem().ignore().andContinueWithNull();
     }
 

@@ -37,7 +37,6 @@ import org.kie.kogito.event.process.ProcessDefinitionDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceStateDataEvent;
 import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceStateDataEvent;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
 import org.kie.kogito.index.json.JsonUtils;
 import org.kie.kogito.index.model.Job;
@@ -73,7 +72,6 @@ import static org.mockito.Mockito.lenient;
 class KogitoIndexEventConverterTest {
 
     private static final String PROCESS_INSTANCE_STATE_EVENT_TYPE = "ProcessInstanceStateDataEvent";
-    private static final String USER_TASK_INSTANCE_STATE_EVENT_TYPE = "UserTaskInstanceStateDataEvent";
     private static final String JOB_EVENT_TYPE = "JobEvent";
     private static final String EVENT_ID = "ID";
     private static final URI EVENT_SOURCE = URI.create("http://localhost:8080/travels");
@@ -83,7 +81,6 @@ class KogitoIndexEventConverterTest {
     private static final String EVENT_SUBJECT = "SUBJECT";
     private static final String STRUCTURED_PROCESS_INSTANCE_CLOUD_EVENT = "process_instance_event.json";
     private static final String BINARY_PROCESS_INSTANCE_CLOUD_EVENT_DATA = "binary_process_instance_event_data.json";
-    private static final String BINARY_USER_TASK_INSTANCE_CLOUD_EVENT_DATA = "binary_user_task_instance_state_event_data.json";
     private static final String BINARY_KOGITO_JOB_CLOUD_EVENT_DATA = "binary_job_event_data.json";
     private static final String STRUCTURED_PROCESS_DEFINITION_CLOUD_EVENT = "process_definition_event.json";
     private static final String BINARY_PROCESS_DEFINITION_CLOUD_EVENT = "binary_process_definition_event.json";
@@ -108,7 +105,6 @@ class KogitoIndexEventConverterTest {
         Buffer buffer = Buffer.buffer("{}");
         Message<?> message = Message.of(buffer, Metadata.of(httpMetadata));
         assertThat(converter.canConvert(message, ProcessInstanceDataEvent.class)).isTrue();
-        assertThat(converter.canConvert(message, UserTaskInstanceDataEvent.class)).isTrue();
         assertThat(converter.canConvert(message, KogitoJobCloudEvent.class)).isTrue();
     }
 
@@ -310,35 +306,6 @@ class KogitoIndexEventConverterTest {
         assertThat(job.getRepeatLimit()).isEqualTo(2147483647);
         assertThat(job.getRetries()).isEqualTo(0);
         assertThat(job.getExecutionCounter()).isEqualTo(0);
-    }
-
-    @Test
-    void convertBinaryUserTaskInstanceDataEvent() throws Exception {
-        Buffer buffer = Buffer.buffer(readFileContent(BINARY_USER_TASK_INSTANCE_CLOUD_EVENT_DATA));
-        Message<?> message = Message.of(buffer, Metadata.of(httpMetadata));
-
-        // set ce-xxx headers for the binary format.
-        headers.add(ceHeader(SPECVERSION), SpecVersion.V1.toString());
-        headers.add(ceHeader(ID), EVENT_ID);
-        headers.add(ceHeader(SOURCE), EVENT_SOURCE.toString());
-        headers.add(ceHeader(TYPE), USER_TASK_INSTANCE_STATE_EVENT_TYPE);
-        headers.add(ceHeader(TIME), EVENT_TIME.toString());
-        headers.add(ceHeader(DATASCHEMA), EVENT_DATA_SCHEMA.toString());
-        headers.add(ceHeader(DATACONTENTTYPE), EVENT_DATA_CONTENT_TYPE);
-        headers.add(ceHeader(SUBJECT), EVENT_SUBJECT);
-
-        Message<?> result = converter.convert(message, UserTaskInstanceDataEvent.class);
-        assertThat(result.getPayload()).isInstanceOf(UserTaskInstanceStateDataEvent.class);
-        UserTaskInstanceStateDataEvent cloudEvent = (UserTaskInstanceStateDataEvent) result.getPayload();
-
-        assertThat(cloudEvent.getId()).isEqualTo(EVENT_ID);
-        assertThat(cloudEvent.getSpecVersion()).isEqualTo(SpecVersion.V1);
-        assertThat(cloudEvent.getSource().toString()).isEqualTo(EVENT_SOURCE.toString());
-        assertThat(cloudEvent.getType()).isEqualTo(USER_TASK_INSTANCE_STATE_EVENT_TYPE);
-        assertThat(cloudEvent.getTime()).isEqualTo(EVENT_TIME);
-        assertThat(cloudEvent.getDataSchema()).isEqualTo(EVENT_DATA_SCHEMA);
-        assertThat(cloudEvent.getDataContentType()).isEqualTo(EVENT_DATA_CONTENT_TYPE);
-        assertThat(cloudEvent.getSubject()).isEqualTo(EVENT_SUBJECT);
     }
 
     @Test

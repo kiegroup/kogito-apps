@@ -25,21 +25,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceStateDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceStateDataEvent;
 import org.kie.kogito.index.model.ProcessInstanceState;
 import org.kie.kogito.index.service.IndexingService;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.kie.kogito.index.test.TestUtils.getProcessCloudEvent;
-import static org.kie.kogito.index.test.TestUtils.getUserTaskCloudEvent;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -58,48 +51,6 @@ public class DomainEventConsumerTest {
     @BeforeEach
     public void setup() {
         consumer.indexDomain = true;
-    }
-
-    @Test
-    public void testOnUserTaskInstanceDomainEventMappingException() {
-        UserTaskInstanceStateDataEvent event = mock(UserTaskInstanceStateDataEvent.class);
-
-        assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> consumer.onDomainEvent(event));
-
-        verify(service, never()).indexModel(any());
-    }
-
-    @Test
-    public void testOnUserTaskInstanceDomainEventIndexingException() {
-        doThrow(new RuntimeException("")).when(service).indexModel(any());
-
-        String taskId = UUID.randomUUID().toString();
-        String processId = "travels";
-        String processInstanceId = UUID.randomUUID().toString();
-
-        UserTaskInstanceDataEvent<?> event = getUserTaskCloudEvent(taskId, processId, processInstanceId, null, null, "InProgress");
-
-        assertThatExceptionOfType(RuntimeException.class).isThrownBy(() -> consumer.onDomainEvent(event));
-        verify(service).indexModel(any());
-    }
-
-    @Test
-    public void testOnUserTaskInstanceEvent() {
-        String taskId = UUID.randomUUID().toString();
-        String processId = "travels";
-        String processInstanceId = UUID.randomUUID().toString();
-
-        UserTaskInstanceDataEvent<?> event = getUserTaskCloudEvent(taskId, processId, processInstanceId, null, null, "InProgress");
-
-        consumer.onDomainEvent(event);
-
-        ArgumentCaptor<ObjectNode> captor = ArgumentCaptor.forClass(ObjectNode.class);
-        verify(service).indexModel(captor.capture());
-
-        assertThatJson(captor.getValue().toString())
-                .isObject()
-                .containsEntry("id", processInstanceId)
-                .containsEntry("processId", processId);
     }
 
     @Test

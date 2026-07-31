@@ -22,7 +22,6 @@ import org.kie.kogito.index.jpa.storage.JPADataIndexStorageService;
 import org.kie.kogito.index.jpa.storage.JobEntityStorage;
 import org.kie.kogito.index.jpa.storage.ProcessDefinitionEntityStorage;
 import org.kie.kogito.index.storage.ProcessInstanceStorage;
-import org.kie.kogito.index.storage.UserTaskInstanceStorage;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -30,8 +29,7 @@ import jakarta.inject.Inject;
 @ApplicationScoped
 public class QuarkusJPADataIndexStorageService extends JPADataIndexStorageService {
     @Inject
-    public QuarkusJPADataIndexStorageService(ProcessDefinitionEntityStorage definitionStorage, JobEntityStorage jobsStorage, ProcessInstanceStorage processInstanceStorage,
-            UserTaskInstanceStorage userTaskInstanceStorage) {
-        super(definitionStorage, jobsStorage, processInstanceStorage, userTaskInstanceStorage);
+    public QuarkusJPADataIndexStorageService(ProcessDefinitionEntityStorage definitionStorage, JobEntityStorage jobsStorage, ProcessInstanceStorage processInstanceStorage) {
+        super(definitionStorage, jobsStorage, processInstanceStorage);
     }
 }

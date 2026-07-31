@@ -57,7 +57,6 @@ public class GraphQLAddonSchemaManagerImpl extends AbstractGraphQLSchemaManager 
                 .type("Query", builder -> {
                     builder.dataFetcher("ProcessDefinitions", this::getProcessDefinitionsValues);
                     builder.dataFetcher("ProcessInstances", this::getProcessInstancesValues);
-                    builder.dataFetcher("UserTaskInstances", this::getUserTaskInstancesValues);
                     builder.dataFetcher("Jobs", this::getJobsValues);
                     addCountQueries(builder);
                     return builder;

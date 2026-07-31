@@ -28,8 +28,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.kie.kogito.event.process.KogitoMarshallEventSupport;
 import org.kie.kogito.event.process.MultipleProcessInstanceDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
-import org.kie.kogito.event.usertask.MultipleUserTaskInstanceDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
 import org.kie.kogito.index.model.ProcessInstanceState;
 import org.kie.kogito.jackson.utils.ObjectMapperFactory;
 import org.kie.kogito.test.quarkus.kafka.KafkaTestClient;
@@ -38,9 +36,7 @@ import org.kie.kogito.testcontainers.quarkus.KafkaQuarkusTestResource;
 import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_JOBS_EVENTS;
 import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_PROCESSINSTANCES_EVENTS;
 import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_PROCESS_DEFINITIONS_EVENTS;
-import static org.kie.kogito.index.service.messaging.ReactiveMessagingEventConsumer.KOGITO_USERTASKINSTANCES_EVENTS;
 import static org.kie.kogito.index.test.TestUtils.getProcessCloudEvent;
-import static org.kie.kogito.index.test.TestUtils.getUserTaskCloudEvent;
 import static org.kie.kogito.index.test.TestUtils.readFileContent;
 
 public abstract class AbstractMessagingKafkaConsumerIT extends AbstractMessagingConsumerIT {
@@ -64,10 +60,6 @@ public abstract class AbstractMessagingKafkaConsumerIT extends AbstractMessaging
         super.close();
     }
 
-    protected void sendUserTaskInstanceEvent() throws Exception {
-        send("user_task_instance_event.json", KOGITO_USERTASKINSTANCES_EVENTS);
-    }
-
     protected void sendProcessInstanceEvent() throws Exception {
         send("process_instance_event.json", KOGITO_PROCESSINSTANCES_EVENTS);
     }
@@ -86,14 +78,6 @@ public abstract class AbstractMessagingKafkaConsumerIT extends AbstractMessaging
                 getProcessCloudEvent("travels", "processId-UUID1", ProcessInstanceState.ACTIVE, null, null, null, "user1"),
                 getProcessCloudEvent("travels", "processId-UUID2", ProcessInstanceState.ACTIVE, null, null, null, "user2"));
         kafkaClient.produce(ObjectMapperFactory.get().writeValueAsString(new MultipleProcessInstanceDataEvent(URI.create("test"), events)), KOGITO_PROCESSINSTANCES_EVENTS);
-    }
-
-    @Override
-    protected void sendUserTaskInstanceEventCollection() throws Exception {
-        Collection<UserTaskInstanceDataEvent<?>> events = List.of(
-                getUserTaskCloudEvent("taskId-UUID1", "travels", "processId-UUID1", null, null, "IN_PROGRESS"),
-                getUserTaskCloudEvent("taskId-UUID2", "travels", "processId-UUID1", null, null, "COMPLETED"));
-        kafkaClient.produce(ObjectMapperFactory.get().writeValueAsString(new MultipleUserTaskInstanceDataEvent(URI.create("test"), events)), KOGITO_USERTASKINSTANCES_EVENTS);
     }
 
     @Override

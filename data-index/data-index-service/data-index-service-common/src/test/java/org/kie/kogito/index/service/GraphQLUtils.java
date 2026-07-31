@@ -25,7 +25,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -36,12 +35,10 @@ import org.kie.kogito.index.model.Job;
 import org.kie.kogito.index.model.ProcessDefinition;
 import org.kie.kogito.index.model.ProcessInstance;
 import org.kie.kogito.index.model.ProcessInstanceState;
-import org.kie.kogito.index.model.UserTaskInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import static java.lang.String.format;
@@ -63,13 +60,6 @@ public class GraphQLUtils {
     private static final String STATUS = "status";
     private static final String BUSSINES_KEY = "bk";
     private static final String IDENT = "ident";
-    private static final String ACTUAL_OWNER = "actualOwner";
-    private static final String STARTED = "started";
-    private static final String COMPLETED = "completed";
-    private static final String POTENTIAL_GROUPS = "potentialGroups";
-    private static final String POTENTIAL_USERS = "potentialUsers";
-    private static final String ROOT_PROCESS_INSTANCE_ID = "rootProcessInstanceId";
-    private static final String ROOT_PROCESS_ID = "rootProcessId";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GraphQLUtils.class);
     private static final Map<Class<?>, String> QUERY_FIELDS = new HashMap<>();
@@ -77,7 +67,6 @@ public class GraphQLUtils {
 
     static {
         QUERY_FIELDS.put(ProcessDefinition.class, getAllFieldsList(ProcessDefinition.class).map(getFieldName()).collect(joining(", ")));
-        QUERY_FIELDS.put(UserTaskInstance.class, getAllFieldsList(UserTaskInstance.class).map(getFieldName()).collect(joining(", ")));
         QUERY_FIELDS.put(ProcessInstance.class, getAllFieldsList(ProcessInstance.class).map(getFieldName()).collect(joining(", ")));
         QUERY_FIELDS.put(Job.class, getAllFieldsList(Job.class).map(getFieldName()).collect(joining(", ")));
         QUERY_FIELDS.computeIfPresent(ProcessInstance.class, (k, v) -> v + ", serviceUrl");
@@ -164,60 +153,8 @@ public class GraphQLUtils {
         return getProcessInstanceQuery("ProcessInstanceByUpdatedBy", Map.of(IDENT, identity));
     }
 
-    public static String getUserTaskInstanceById(String id) {
-        return getUserTaskInstanceQuery("UserTaskInstanceById", Map.of(ID, id));
-    }
-
-    public static String getUserTaskInstanceByProcessInstanceId(String id) {
-        return getUserTaskInstanceQuery("UserTaskInstanceByProcessInstanceId", Map.of(ID, id));
-    }
-
-    public static String getUserTaskInstanceByIdAndActualOwner(String id, String actualOwner) {
-        return getUserTaskInstanceQuery("UserTaskInstanceByIdAndActualOwner", Map.of(ID, id, ACTUAL_OWNER, actualOwner));
-    }
-
-    public static String getUserTaskInstanceByIdAndProcessId(String id, String processId) {
-        return getUserTaskInstanceQuery("UserTaskInstanceByIdAndProcessId", Map.of(ID, id, PROCESS_ID, processId));
-    }
-
-    public static String getUserTaskInstanceByIdNoActualOwner(String id) {
-        return getUserTaskInstanceQuery("UserTaskInstanceByIdNoActualOwner", Map.of(ID, id));
-    }
-
-    public static String getUserTaskInstanceByIdAndState(String id, String state) {
-        return getUserTaskInstanceQuery("UserTaskInstanceByIdAndState", Map.of(ID, id, STATE, state));
-    }
-
-    public static String getUserTaskInstanceByIdAndStarted(String id, String started) {
-        return getUserTaskInstanceQuery("UserTaskInstanceByIdAndStarted", Map.of(ID, id, STARTED, started));
-    }
-
-    public static String getUserTaskInstanceByIdAndCompleted(String id, String completed) {
-        return getUserTaskInstanceQuery("UserTaskInstanceByIdAndCompleted", Map.of(ID, id, COMPLETED, completed));
-    }
-
-    public static String getUserTaskInstanceByIdAndPotentialGroups(String id, List<String> potentialGroups) throws Exception {
-        return getUserTaskInstanceWithArray("UserTaskInstanceByIdAndPotentialGroups", potentialGroups, POTENTIAL_GROUPS, Map.of(ID, id));
-    }
-
-    public static String getUserTaskInstanceByIdAndPotentialUsers(String id, List<String> potentialUsers) throws Exception {
-        return getUserTaskInstanceWithArray("UserTaskInstanceByIdAndPotentialUsers", potentialUsers, POTENTIAL_USERS, Map.of(ID, id));
-    }
-
-    public static String getUserTaskInstanceByIdAndRootProcessInstanceId(String id, String rootProcessInstanceId) {
-        return getUserTaskInstanceQuery("UserTaskInstanceByIdAndRootProcessInstanceId", Map.of(ID, id, ROOT_PROCESS_INSTANCE_ID, rootProcessInstanceId));
-    }
-
-    public static String getUserTaskInstanceByIdAndRootProcessId(String id, String rootProcessId) {
-        return getUserTaskInstanceQuery("UserTaskInstanceByIdAndRootProcessId", Map.of(ID, id, ROOT_PROCESS_ID, rootProcessId));
-    }
-
     public static String getJobById(String id) {
         return getJobQuery("JobById", Map.of(ID, id));
-    }
-
-    public static String getTravelsByUserTaskId(String id) {
-        return getQuery("TravelsByUserTaskId", id);
     }
 
     public static String getTravelsByProcessInstanceId(String id) {
@@ -236,14 +173,6 @@ public class GraphQLUtils {
         return getQuery("DealsByTaskIdNoActualOwner", id);
     }
 
-    private static String getUserTaskInstanceWithArray(String query, List<String> values, String variable, Map<String, Object> args) throws Exception {
-        String json = getUserTaskInstanceQuery(query, args);
-        ObjectNode jsonNode = (ObjectNode) getObjectMapper().readTree(json);
-        ArrayNode pg = (ArrayNode) jsonNode.get("variables").get(variable);
-        values.forEach(g -> pg.add(g));
-        return jsonNode.toString();
-    }
-
     private static String getQuery(String name, String... args) {
         return format(QUERIES.get(name), args);
     }
@@ -254,10 +183,6 @@ public class GraphQLUtils {
 
     private static String getProcessDefinitionQuery(String name, Map<String, Object> args) {
         return getQuery(name, ProcessDefinition.class, args);
-    }
-
-    private static String getUserTaskInstanceQuery(String name, Map<String, Object> args) {
-        return getQuery(name, UserTaskInstance.class, args);
     }
 
     private static String getJobQuery(String name, Map<String, Object> args) {

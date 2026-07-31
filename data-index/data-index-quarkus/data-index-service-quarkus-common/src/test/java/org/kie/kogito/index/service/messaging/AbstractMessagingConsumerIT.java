@@ -48,7 +48,6 @@ public abstract class AbstractMessagingConsumerIT {
         cacheService.getJobsStorage().clear();
         cacheService.getProcessDefinitionStorage().clear();
         cacheService.getProcessInstanceStorage().clear();
-        cacheService.getUserTaskInstanceStorage().clear();
     }
 
     @AfterEach
@@ -56,7 +55,6 @@ public abstract class AbstractMessagingConsumerIT {
         cacheService.getJobsStorage().clear();
         cacheService.getProcessDefinitionStorage().clear();
         cacheService.getProcessInstanceStorage().clear();
-        cacheService.getUserTaskInstanceStorage().clear();
     }
 
     @Test
@@ -89,22 +87,6 @@ public abstract class AbstractMessagingConsumerIT {
                                 .then().log().ifValidationFails().statusCode(200)
                                 .body("data.ProcessDefinitions.size()", is(1))
                                 .body("data.ProcessDefinitions[0].id", is(id)));
-    }
-
-    @Test
-    void testUserTaskInstanceEvent() throws Exception {
-        sendUserTaskInstanceEvent();
-
-        String taskId = "45fae435-b098-4f27-97cf-a0c107072e8b";
-
-        await()
-                .atMost(timeout)
-                .untilAsserted(
-                        () -> given().contentType(ContentType.JSON).body("{ \"query\" : \"{ UserTaskInstances { id } }\" }")
-                                .when().post("/graphql")
-                                .then().log().ifValidationFails().statusCode(200)
-                                .body("data.UserTaskInstances.size()", is(1))
-                                .body("data.UserTaskInstances[0].id", is(taskId)));
     }
 
     @Test
@@ -148,26 +130,6 @@ public abstract class AbstractMessagingConsumerIT {
     }
 
     @Test
-    void testUserTaskInstanceEventCollection() throws Exception {
-        sendUserTaskInstanceEventCollection();
-
-        String taskId1 = "taskId-UUID1";
-        String taskId2 = "taskId-UUID2";
-
-        await()
-                .atMost(timeout)
-                .untilAsserted(() -> given().contentType(ContentType.JSON)
-                        .body("{ \"query\" : \"{ UserTaskInstances { id, state } }\" }")
-                        .when().post("/graphql")
-                        .then().log().ifValidationFails().statusCode(200)
-                        .body("data.UserTaskInstances.size()", is(2))
-                        .body("data.UserTaskInstances[0].id", is(taskId1))
-                        .body("data.UserTaskInstances[0].state", is("IN_PROGRESS"))
-                        .body("data.UserTaskInstances[1].id", is(taskId2))
-                        .body("data.UserTaskInstances[1].state", is("COMPLETED")));
-    }
-
-    @Test
     void testProcessDefinitionEventCollection() throws Exception {
         sendProcessDefinitionEventCollection();
 
@@ -186,8 +148,6 @@ public abstract class AbstractMessagingConsumerIT {
                         .body("data.ProcessDefinitions[1].version", is("1.1")));
     }
 
-    protected abstract void sendUserTaskInstanceEvent() throws Exception;
-
     protected abstract void sendProcessInstanceEvent() throws Exception;
 
     protected abstract void sendProcessDefinitionEvent() throws Exception;
@@ -195,8 +155,6 @@ public abstract class AbstractMessagingConsumerIT {
     protected abstract void sendJobEvent() throws Exception;
 
     protected abstract void sendProcessInstanceEventCollection() throws Exception;
-
-    protected abstract void sendUserTaskInstanceEventCollection() throws Exception;
 
     protected abstract void sendProcessDefinitionEventCollection() throws Exception;
 }

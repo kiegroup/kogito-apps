@@ -43,6 +43,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
@@ -60,8 +61,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.kie.kogito.index.quarkus.service.api.KogitoRuntimeClientImpl.ABORT_PROCESS_INSTANCE_PATH;
 import static org.kie.kogito.index.quarkus.service.api.KogitoRuntimeClientImpl.CANCEL_NODE_INSTANCE_PATH;
 import static org.kie.kogito.index.quarkus.service.api.KogitoRuntimeClientImpl.GET_PROCESS_INSTANCE_DIAGRAM_PATH;
-import static org.kie.kogito.index.quarkus.service.api.KogitoRuntimeClientImpl.GET_PROCESS_INSTANCE_NODE_DEFINITIONS_VERSION_PATH;
-import static org.kie.kogito.index.quarkus.service.api.KogitoRuntimeClientImpl.GET_PROCESS_INSTANCE_SOURCE_PATH_VERSION;
+import static org.kie.kogito.index.quarkus.service.api.KogitoRuntimeClientImpl.GET_PROCESS_INSTANCE_NODE_DEFINITIONS_PATH;
+import static org.kie.kogito.index.quarkus.service.api.KogitoRuntimeClientImpl.GET_PROCESS_INSTANCE_SOURCE_PATH;
 import static org.kie.kogito.index.quarkus.service.api.KogitoRuntimeClientImpl.RETRIGGER_NODE_INSTANCE_PATH;
 import static org.kie.kogito.index.quarkus.service.api.KogitoRuntimeClientImpl.RETRY_PROCESS_INSTANCE_PATH;
 import static org.kie.kogito.index.quarkus.service.api.KogitoRuntimeClientImpl.SKIP_PROCESS_INSTANCE_PATH;
@@ -71,6 +72,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -102,12 +104,17 @@ public class KogitoRuntimeClientTest {
 
     @Mock
     private HttpRequest httpRequestMock;
+    @Mock
+    private MultiMap headersMap;
 
     @BeforeEach
     public void setup() {
         client = spy(new KogitoRuntimeClientImpl(Optional.empty(), authTokenReader, vertx));
         client.setGatewayTargetUrl(Optional.empty());
         client.addServiceWebClient(SERVICE_URL, webClientMock);
+        lenient().when(webClientMock.head(anyString())).thenReturn(httpRequestMock);
+        lenient().when(httpRequestMock.headers()).thenReturn(headersMap);
+        lenient().when(headersMap.contains(anyString())).thenReturn(false);
     }
 
     @Test
@@ -313,7 +320,7 @@ public class KogitoRuntimeClientTest {
 
         client.getProcessDefinitionNodes(SERVICE_URL, pI.getKogitoProcessId());
         verify(client).sendGetClientRequest(webClientMock,
-                format(GET_PROCESS_INSTANCE_NODE_DEFINITIONS_VERSION_PATH, pI.getProcessId(), pI.getVersion(), pI.getId()),
+                format(GET_PROCESS_INSTANCE_NODE_DEFINITIONS_PATH, pI.getProcessId(), pI.getId()),
                 "Get Process available nodes with id: " + pI.getKogitoProcessId(),
                 List.class);
         ArgumentCaptor<Handler> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
@@ -342,7 +349,7 @@ public class KogitoRuntimeClientTest {
 
         client.getProcessDefinitionSourceFileContent(SERVICE_URL, pI.getKogitoProcessId());
         verify(client).sendGetClientRequest(webClientMock,
-                format(GET_PROCESS_INSTANCE_SOURCE_PATH_VERSION, pI.getProcessId(), pI.getVersion()),
+                format(GET_PROCESS_INSTANCE_SOURCE_PATH, pI.getProcessId()),
                 "Get Process Instance source file with processId: " + pI.getKogitoProcessId(),
                 null);
         ArgumentCaptor<Handler> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
