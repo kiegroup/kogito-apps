@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.kie.kogito</groupId>
     <artifactId>integration-tests-jobs-service</artifactId>
-    <version>111-SNAPSHOT</version>
+    <version>9.106.0</version>
   </parent>
 
   <artifactId>integration-tests-jobs-service-common</artifactId>
