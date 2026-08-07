@@ -73,9 +73,10 @@ public class ProcessDefinitionRegister {
             pd.setType(p.type());
             pd.setAddons(addons);
             // See ProcessInstanceEventBatch.buildSource
-            pd.setEndpoint(endpoint + "/" + (p.id().contains(".") ? p.id().substring(p.id().lastIndexOf('.') + 1) : p.id()));
+            String id = (p.id().contains(".") ? p.id().substring(p.id().lastIndexOf('.') + 1) : p.id());
+            pd.setEndpoint(endpoint + "/" + id + '/' + p.version());
             try {
-                String content = client.getProcessDefinitionSourceFileContent(null, p.processId()).get();
+                String content = client.getProcessDefinitionSourceFileContent(pd).get();
                 pd.setSource(content);
             } catch (InterruptedException e) {
                 LOGGER.warn("Interrupted thread while registering process definition with id: {}", p.id(), e);
@@ -84,7 +85,7 @@ public class ProcessDefinitionRegister {
                 throw new DataIndexServiceException(format("Failed to register process definition with id: %s", p.id()), e);
             }
             try {
-                pd.setNodes(client.getProcessDefinitionNodes(null, p.processId()).get());
+                pd.setNodes(client.getProcessDefinitionNodes(pd).get());
             } catch (InterruptedException e) {
                 LOGGER.warn("Interrupted thread while registering process definition with id: {}", p.id(), e);
                 Thread.currentThread().interrupt();
