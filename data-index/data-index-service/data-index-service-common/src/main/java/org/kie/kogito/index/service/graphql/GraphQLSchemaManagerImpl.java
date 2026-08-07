@@ -29,6 +29,7 @@ import org.kie.kogito.index.graphql.AbstractGraphQLSchemaManager;
 import org.kie.kogito.index.graphql.query.GraphQLQueryParserRegistry;
 import org.kie.kogito.index.json.DataIndexParsingException;
 import org.kie.kogito.index.model.ProcessInstanceState;
+import org.kie.kogito.index.model.URIInfo;
 import org.kie.kogito.index.service.DataIndexServiceException;
 import org.kie.kogito.index.storage.DataIndexStorageService;
 import org.kie.kogito.persistence.api.StorageFetcher;
@@ -160,7 +161,8 @@ public class GraphQLSchemaManagerImpl extends AbstractGraphQLSchemaManager {
         if (source instanceof JsonNode) {
             String endpoint = ((JsonNode) source).get("endpoint").asText();
             String processId = ((JsonNode) source).get("processId").asText();
-            return getServiceUrl(endpoint, processId);
+            String version = ((JsonNode) source).get("version").asText();
+            return URIInfo.from(endpoint, processId, version).truncatedURI().toString();
         }
         return null;
     }

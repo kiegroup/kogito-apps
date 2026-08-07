@@ -22,9 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.kie.kogito.index.model.ProcessInstance;
 import org.mockito.Mockito;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import graphql.schema.DataFetchingEnvironment;
 
@@ -45,25 +43,8 @@ public class GraphQLSchemaManagerTest {
     }
 
     @Test
-    public void testJsonNullServiceUrl() {
-        assertThat(schemaManager.getProcessInstanceJsonServiceUrl(geJsonEnv(null, null))).isNull();
-        assertThat(schemaManager.getProcessInstanceJsonServiceUrl(geJsonEnv("travels", null))).isNull();
-        assertThat(schemaManager.getProcessInstanceJsonServiceUrl(geJsonEnv("demo.orders", null))).isNull();
-        assertThat(schemaManager.getProcessInstanceJsonServiceUrl(geJsonEnv("demo.orderItems", null))).isNull();
-    }
-
-    @Test
     public void testNullProcessIdServiceUrl() {
-        assertThat(schemaManager.getProcessInstanceServiceUrl(getEnv("travels", "/travels"))).isNull();
-        assertThat(schemaManager.getProcessInstanceServiceUrl(getEnv("demo.orders", "/orders"))).isNull();
-        assertThat(schemaManager.getProcessInstanceServiceUrl(getEnv("demo.orderItems", "/orderItems"))).isNull();
-    }
-
-    @Test
-    public void testJsonNullProcessIdServiceUrl() {
-        assertThat(schemaManager.getProcessInstanceJsonServiceUrl(geJsonEnv("travels", "/travels"))).isNull();
-        assertThat(schemaManager.getProcessInstanceJsonServiceUrl(geJsonEnv("demo.orders", "/orders"))).isNull();
-        assertThat(schemaManager.getProcessInstanceJsonServiceUrl(geJsonEnv("demo.orderItems", "/orderItems"))).isNull();
+        assertThat(schemaManager.getProcessInstanceServiceUrl(getEnv("travels", "/travels"))).isEmpty();
     }
 
     @Test
@@ -74,31 +55,10 @@ public class GraphQLSchemaManagerTest {
         assertThat(schemaManager.getProcessInstanceServiceUrl(getEnv("demo.orderItems", "http://localhost:8080/orderItems"))).isEqualTo("http://localhost:8080");
     }
 
-    @Test
-    public void testJsonUrlProcessIdServiceUrl() {
-        assertThat(schemaManager.getProcessInstanceJsonServiceUrl(geJsonEnv("travels", "http://localhost:8080/travels"))).isEqualTo("http://localhost:8080");
-        assertThat(schemaManager.getProcessInstanceJsonServiceUrl(geJsonEnv("travels", "http://travels.example.com/travels"))).isEqualTo("http://travels.example.com");
-        assertThat(schemaManager.getProcessInstanceJsonServiceUrl(geJsonEnv("demo.orders", "http://localhost:8080/orders"))).isEqualTo("http://localhost:8080");
-        assertThat(schemaManager.getProcessInstanceJsonServiceUrl(geJsonEnv("demo.orderItems", "http://localhost:8080/orderItems"))).isEqualTo("http://localhost:8080");
-    }
-
-    private DataFetchingEnvironment geJsonEnv(String processId, String endpoint) {
-        DataFetchingEnvironment env = Mockito.mock(DataFetchingEnvironment.class);
-        Mockito.when(env.getSource()).thenReturn(getProcessInstanceJson(processId, endpoint));
-        return env;
-    }
-
     private DataFetchingEnvironment getEnv(String processId, String endpoint) {
         DataFetchingEnvironment env = Mockito.mock(DataFetchingEnvironment.class);
         Mockito.when(env.getSource()).thenReturn(getProcessInstance(processId, endpoint));
         return env;
-    }
-
-    private JsonNode getProcessInstanceJson(String processId, String endpoint) {
-        ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put("processId", processId);
-        objectNode.put("endpoint", endpoint);
-        return objectNode;
     }
 
     private ProcessInstance getProcessInstance(String processId, String endpoint) {

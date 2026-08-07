@@ -25,7 +25,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.kie.api.definition.process.KogitoProcessId;
 import org.kie.kogito.event.process.ProcessDefinitionDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceStateDataEvent;
@@ -87,8 +86,7 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
 
         checkOkResponse("{ \"query\" : \"mutation{ ProcessInstanceAbort ( id: \\\"" + processInstanceId + "\\\")}\"}");
 
-        verify(dataIndexApiClient).abortProcessInstance(eq("http://localhost:8080"),
-                eq(getProcessInstance(processId, processInstanceId, 1, null, null)));
+        verify(dataIndexApiClient).abortProcessInstance(eq(getProcessInstance(processId, processInstanceId, 1, null, null)));
     }
 
     @Test
@@ -138,7 +136,7 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
 
         checkOkResponse("{ \"query\" : \"mutation{ ProcessInstanceRetry ( id: \\\"" + processInstanceId + "\\\")}\"}");
 
-        verify(dataIndexApiClient).retryProcessInstance(eq("http://localhost:8080"),
+        verify(dataIndexApiClient).retryProcessInstance(
                 eq(getProcessInstance(processId, processInstanceId, 1, null, null)));
     }
 
@@ -152,7 +150,7 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
 
         checkOkResponse("{ \"query\" : \"mutation{ ProcessInstanceSkip ( id: \\\"" + processInstanceId + "\\\")}\"}");
 
-        verify(dataIndexApiClient).skipProcessInstance(eq("http://localhost:8080"),
+        verify(dataIndexApiClient).skipProcessInstance(
                 eq(getProcessInstance(processId, processInstanceId, 1, null, null)));
     }
 
@@ -167,7 +165,7 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
 
         checkOkResponse("{ \"query\" : \"mutation{ ProcessInstanceUpdateVariables ( id: \\\"" + processInstanceId + "\\\", variables: \\\"" + variablesUpdated + "\\\")}\"}");
 
-        verify(dataIndexApiClient).updateProcessInstanceVariables(eq("http://localhost:8080"),
+        verify(dataIndexApiClient).updateProcessInstanceVariables(
                 eq(getProcessInstance(processId, processInstanceId, 1, null, null)), eq(variablesUpdated));
     }
 
@@ -180,7 +178,7 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
         indexProcessCloudEvent(startEvent);
 
         checkOkResponse("{ \"query\" : \"query { ProcessInstances (where: { id: {equal: \\\"" + processInstanceId + "\\\"}}) { nodeDefinitions { id }} }\" }");
-        verify(dataIndexApiClient).getProcessDefinitionNodes(eq("http://localhost:8080"), eq(new KogitoProcessId(processId)));
+        verify(dataIndexApiClient).getProcessDefinitionNodes(TestUtils.getProcessDefinition(processInstanceId));
     }
 
     @Test
@@ -193,7 +191,7 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
 
         checkOkResponse("{ \"query\" : \"query { ProcessInstances (where: { id: {equal: \\\"" + processInstanceId + "\\\"}}) {diagram} }\" }");
 
-        verify(dataIndexApiClient).getProcessInstanceDiagram(eq("http://localhost:8080"),
+        verify(dataIndexApiClient).getProcessInstanceDiagram(
                 eq(getProcessInstance(processId, processInstanceId, 1, null, null)));
     }
 
@@ -207,7 +205,7 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
 
         checkOkResponse("{ \"query\" : \"query { ProcessInstances (where: { id: {equal: \\\"" + processInstanceId + "\\\"}}) {source} }\" }");
 
-        verify(dataIndexApiClient).getProcessDefinitionSourceFileContent(eq("http://localhost:8080"), eq(new KogitoProcessId(processId)));
+        verify(dataIndexApiClient).getProcessDefinitionSourceFileContent(TestUtils.getProcessDefinition(processInstanceId));
     }
 
     @Test
@@ -221,7 +219,7 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
 
         checkOkResponse("{ \"query\" : \"mutation{ NodeInstanceTrigger ( id: \\\"" + processInstanceId + "\\\", nodeId: \\\"" + nodeId + "\\\")}\"}");
 
-        verify(dataIndexApiClient).triggerNodeInstance(eq("http://localhost:8080"),
+        verify(dataIndexApiClient).triggerNodeInstance(
                 eq(getProcessInstance(processId, processInstanceId, 1, null, null)), eq(nodeId));
     }
 
@@ -236,7 +234,7 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
 
         checkOkResponse("{ \"query\" : \"mutation{ NodeInstanceRetrigger ( id: \\\"" + processInstanceId + "\\\", nodeInstanceId: \\\"" + nodeInstanceId + "\\\")}\"}");
 
-        verify(dataIndexApiClient).retriggerNodeInstance(eq("http://localhost:8080"),
+        verify(dataIndexApiClient).retriggerNodeInstance(
                 eq(getProcessInstance(processId, processInstanceId, 1, null, null)), eq(nodeInstanceId));
     }
 
@@ -251,7 +249,7 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
 
         checkOkResponse("{ \"query\" : \"mutation{ NodeInstanceCancel ( id: \\\"" + processInstanceId + "\\\", nodeInstanceId: \\\"" + nodeInstanceId + "\\\")}\"}");
 
-        verify(dataIndexApiClient).cancelNodeInstance(eq("http://localhost:8080"),
+        verify(dataIndexApiClient).cancelNodeInstance(
                 eq(getProcessInstance(processId, processInstanceId, 1, null, null)), eq(nodeInstanceId));
     }
 
@@ -265,7 +263,7 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
         indexJobCloudEvent(event);
         checkOkResponse("{ \"query\" : \"mutation{ JobCancel ( id: \\\"" + jobId + "\\\")}\"}");
 
-        verify(dataIndexApiClient).cancelJob(eq("http://localhost:8080/jobs"),
+        verify(dataIndexApiClient).cancelJob(
                 eq(getJob(jobId, processId, processInstanceId, null, null, "SCHEDULED")));
     }
 
@@ -280,7 +278,7 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
         indexJobCloudEvent(event);
         checkOkResponse("{ \"query\" : \"mutation{ JobReschedule ( id: \\\"" + jobId + "\\\", data: \\\"" + data + "\\\")}\"}");
 
-        verify(dataIndexApiClient).rescheduleJob(eq("http://localhost:8080/jobs"),
+        verify(dataIndexApiClient).rescheduleJob(
                 eq(getJob(jobId, processId, processInstanceId, null, null, "SCHEDULED")),
                 eq(data));
     }
