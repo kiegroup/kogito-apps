@@ -22,7 +22,6 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import org.kie.api.definition.process.KogitoProcessId;
 import org.kie.kogito.index.model.Job;
 import org.kie.kogito.index.model.Node;
 import org.kie.kogito.index.model.ProcessDefinition;
@@ -35,33 +34,33 @@ public interface KogitoRuntimeClient {
 
     CompletableFuture<JsonNode> executeProcessInstance(ProcessDefinition definition, ExecuteArgs args);
 
-    CompletableFuture<String> abortProcessInstance(String serviceURL, ProcessInstance processInstance);
+    CompletableFuture<String> abortProcessInstance(ProcessInstance processInstance);
 
-    CompletableFuture<String> retryProcessInstance(String serviceURL, ProcessInstance processInstance);
+    CompletableFuture<String> retryProcessInstance(ProcessInstance processInstance);
 
-    CompletableFuture<String> skipProcessInstance(String serviceURL, ProcessInstance processInstance);
+    CompletableFuture<String> skipProcessInstance(ProcessInstance processInstance);
 
-    CompletableFuture<String> updateProcessInstanceVariables(String serviceURL, ProcessInstance processInstance, String variables);
+    CompletableFuture<String> updateProcessInstanceVariables(ProcessInstance processInstance, String variables);
 
-    CompletableFuture<String> getProcessInstanceDiagram(String serviceURL, ProcessInstance processInstance);
+    CompletableFuture<String> getProcessInstanceDiagram(ProcessInstance processInstance);
 
-    CompletableFuture<String> getProcessDefinitionSourceFileContent(String serviceURL, KogitoProcessId processId);
+    CompletableFuture<List<Node>> getProcessDefinitionNodes(ProcessDefinition pd);
 
-    CompletableFuture<List<Node>> getProcessDefinitionNodes(String serviceURL, KogitoProcessId processId);
+    CompletableFuture<String> getProcessDefinitionSourceFileContent(ProcessDefinition pd);
 
-    CompletableFuture<String> triggerNodeInstance(String serviceURL, ProcessInstance processInstance, String nodeDefinitionId);
+    CompletableFuture<String> triggerNodeInstance(ProcessInstance processInstance, String nodeDefinitionId);
 
-    CompletableFuture<String> retriggerNodeInstance(String serviceURL, ProcessInstance processInstance, String nodeInstanceId);
+    CompletableFuture<String> retriggerNodeInstance(ProcessInstance processInstance, String nodeInstanceId);
 
-    CompletableFuture<String> cancelNodeInstance(String serviceURL, ProcessInstance processInstance, String nodeInstanceId);
+    CompletableFuture<String> cancelNodeInstance(ProcessInstance processInstance, String nodeInstanceId);
 
-    CompletableFuture<String> cancelJob(String serviceURL, Job job);
+    CompletableFuture<String> cancelJob(Job job);
 
-    CompletableFuture<String> rescheduleJob(String serviceURL, Job job, String newJobData);
+    CompletableFuture<String> rescheduleJob(Job job, String newJobData);
 
-    CompletableFuture<List<Timer>> getProcessInstanceTimers(String serviceUrl, ProcessInstance processInstance);
+    CompletableFuture<List<Timer>> getProcessInstanceTimers(ProcessInstance processInstance);
 
-    CompletableFuture<String> rescheduleNodeInstanceSla(String serviceURL, ProcessInstance processInstance, String nodeInstanceId, ZonedDateTime expirationTime);
+    CompletableFuture<String> rescheduleNodeInstanceSla(ProcessInstance processInstance, String nodeInstanceId, ZonedDateTime expirationTime);
 
-    CompletableFuture<String> rescheduleProcessInstanceSla(String serviceURL, ProcessInstance processInstance, ZonedDateTime expirationTime);
+    CompletableFuture<String> rescheduleProcessInstanceSla(ProcessInstance processInstance, ZonedDateTime expirationTime);
 }

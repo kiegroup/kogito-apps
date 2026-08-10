@@ -18,8 +18,7 @@
  */
 package org.kie.kogito.index.service;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -27,7 +26,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 import org.kie.kogito.index.model.Job;
+import org.kie.kogito.index.model.URIInfo;
 import org.kie.kogito.index.service.auth.DataIndexAuthTokenReader;
+import org.kie.kogito.internal.utils.ConversionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,38 +75,44 @@ public abstract class KogitoRuntimeCommonClient {
         serviceWebClientMap.put(serviceUrl, webClient);
     }
 
-    protected WebClient getWebClient(String runtimeServiceUrl) {
-        if (runtimeServiceUrl == null) {
-            throw new DataIndexServiceException("Runtime service URL not defined, please review the kogito.service.url system property to point the public URL for this runtime.");
-        } else {
-            return serviceWebClientMap.computeIfAbsent(runtimeServiceUrl, url -> WebClient.create(vertx, getWebClientToURLOptions(runtimeServiceUrl)));
-        }
+    protected WebClient getWebClient(URI uri) {
+        return serviceWebClientMap.computeIfAbsent(uri.getHost(), k -> WebClient.create(vertx, getWebClientToURLOptions(uri)));
     }
 
-    public WebClientOptions getWebClientToURLOptions(String targetHttpURL) {
-        try {
-            URL dataIndexURL = new URL(targetHttpURL);
-            return new WebClientOptions()
-                    .setDefaultHost(gatewayTargetUrl.orElse(dataIndexURL.getHost()))
-                    .setDefaultPort((dataIndexURL.getPort() != -1 ? dataIndexURL.getPort() : dataIndexURL.getDefaultPort()))
-                    .setSsl(dataIndexURL.getProtocol().compareToIgnoreCase("https") == 0);
-        } catch (MalformedURLException ex) {
-            LOGGER.error(String.format("Invalid runtime service URL: %s", targetHttpURL), ex);
-            return null;
+    public WebClientOptions getWebClientToURLOptions(URI uri) {
+        WebClientOptions options = new WebClientOptions()
+                .setDefaultHost(gatewayTargetUrl.orElse(uri.getHost()));
+        if (uri.getScheme().equalsIgnoreCase("https")) {
+            options.setSsl(true);
+            options.setDefaultPort(443);
         }
+        return options;
     }
 
-    public CompletableFuture<String> cancelJob(String serviceURL, Job job) {
+    public CompletableFuture<String> cancelJob(Job job) {
         String requestURI = format(CANCEL_JOB_PATH, job.getId());
         LOGGER.debug("Sending DELETE to URI {}", requestURI);
-        return sendDeleteClientRequest(getWebClient(serviceURL), requestURI, "CANCEL Job with id: " + job.getId());
+        return sendDeleteClientRequest(getWebClient(URI.create(job.getEndpoint())), requestURI, "CANCEL Job with id: " + job.getId());
     }
 
-    public CompletableFuture<String> rescheduleJob(String serviceURL, Job job, String newJobData) {
+    public CompletableFuture<String> rescheduleJob(Job job, String newJobData) {
         String requestURI = format(RESCHEDULE_JOB_PATH, job.getId());
         LOGGER.debug("Sending body: {} PATCH to URI {}", newJobData, requestURI);
-        return sendPatchClientRequest(getWebClient(serviceURL), requestURI,
+        return sendPatchClientRequest(getWebClient(URI.create(job.getEndpoint())), requestURI,
                 "RESCHEDULED JOB with id: " + job.getId(), new JsonObject(newJobData));
+    }
+
+    protected static String append(URIInfo info, String requestURI) {
+        String path = info.truncatedURI().getPath();
+        return ConversionUtils.isEmpty(path) ? requestURI : concatURI(path, requestURI);
+    }
+
+    protected static String concatURI(String path, String requestURI) {
+        return requestURI.startsWith("/") ? path.concat(requestURI) : path + '/' + requestURI;
+    }
+
+    public CompletableFuture sendDeleteClientRequest(URIInfo info, String requestURI, String logMessage) {
+        return sendDeleteClientRequest(getWebClient(info.truncatedURI()), append(info, requestURI), logMessage);
     }
 
     public CompletableFuture sendDeleteClientRequest(WebClient webClient, String requestURI, String logMessage) {
@@ -133,6 +140,11 @@ public abstract class KogitoRuntimeCommonClient {
             LOGGER.error("Error {}", logMessage);
             future.completeExceptionally(new DataIndexServiceException(getErrorMessage(logMessage, res.result())));
         }
+    }
+
+    public CompletableFuture sendPatchClientRequest(URIInfo info, String requestURI, String logMessage, JsonObject jsonBody) {
+        return sendPatchClientRequest(getWebClient(info.truncatedURI()), append(info, requestURI), logMessage, jsonBody);
+
     }
 
     public CompletableFuture sendPatchClientRequest(WebClient webClient, String requestURI, String logMessage, JsonObject jsonBody) {
