@@ -96,7 +96,7 @@ public class KogitoAddonRuntimeClient extends KogitoRuntimeCommonClient implemen
     }
 
     @Override
-    public CompletableFuture<String> abortProcessInstance(String serviceURL, ProcessInstance processInstance) {
+    public CompletableFuture<String> abortProcessInstance(ProcessInstance processInstance) {
         return CompletableFuture.completedFuture(executeOnProcessInstance(processInstance.getKogitoProcessId(), processInstance.getId(), pInstance -> {
             pInstance.abort();
 
@@ -109,7 +109,7 @@ public class KogitoAddonRuntimeClient extends KogitoRuntimeCommonClient implemen
     }
 
     @Override
-    public CompletableFuture<String> retryProcessInstance(String serviceURL, ProcessInstance processInstance) {
+    public CompletableFuture<String> retryProcessInstance(ProcessInstance processInstance) {
         return CompletableFuture.completedFuture(executeOnProcessInstance(processInstance.getKogitoProcessId(), processInstance.getId(), pInstance -> {
             pInstance.error().get().retrigger();
 
@@ -122,7 +122,7 @@ public class KogitoAddonRuntimeClient extends KogitoRuntimeCommonClient implemen
     }
 
     @Override
-    public CompletableFuture<String> skipProcessInstance(String serviceURL, ProcessInstance processInstance) {
+    public CompletableFuture<String> skipProcessInstance(ProcessInstance processInstance) {
         return CompletableFuture.completedFuture(executeOnProcessInstance(processInstance.getKogitoProcessId(), processInstance.getId(), pInstance -> {
             pInstance.error().get().skip();
 
@@ -135,7 +135,7 @@ public class KogitoAddonRuntimeClient extends KogitoRuntimeCommonClient implemen
     }
 
     @Override
-    public CompletableFuture<String> updateProcessInstanceVariables(String serviceURL, ProcessInstance processInstance, String variables) {
+    public CompletableFuture<String> updateProcessInstanceVariables(ProcessInstance processInstance, String variables) {
         return CompletableFuture.completedFuture(executeOnProcessInstance(processInstance.getKogitoProcessId(), processInstance.getId(), pInstance -> {
             try {
                 Model model = (Model) convertValue(fromString(variables), pInstance.variables().getClass());
@@ -154,7 +154,7 @@ public class KogitoAddonRuntimeClient extends KogitoRuntimeCommonClient implemen
     }
 
     @Override
-    public CompletableFuture<String> getProcessInstanceDiagram(String serviceURL, ProcessInstance processInstance) {
+    public CompletableFuture<String> getProcessInstanceDiagram(ProcessInstance processInstance) {
         if (processSvgService == null) {
             return CompletableFuture.completedFuture(null);
         } else {
@@ -164,11 +164,11 @@ public class KogitoAddonRuntimeClient extends KogitoRuntimeCommonClient implemen
     }
 
     @Override
-    public CompletableFuture<String> getProcessDefinitionSourceFileContent(String serviceURL, KogitoProcessId processId) {
+    public CompletableFuture<String> getProcessDefinitionSourceFileContent(ProcessDefinition processDef) {
         if (sourceFilesProvider == null) {
             return CompletableFuture.completedFuture(null);
         }
-        return CompletableFuture.supplyAsync(() -> sourceFilesProvider.getProcessSourceFile(processId)
+        return CompletableFuture.supplyAsync(() -> sourceFilesProvider.getProcessSourceFile(processDef.getKogitoProcessId())
                 .map(sourceFile -> {
                     try {
                         return sourceFile.readContents();
@@ -177,12 +177,12 @@ public class KogitoAddonRuntimeClient extends KogitoRuntimeCommonClient implemen
                     }
                 })
                 .map(String::new)
-                .orElseThrow(() -> new DataIndexServiceException("Source file not found for the specified process ID: " + processId)), managedExecutor);
+                .orElseThrow(() -> new DataIndexServiceException("Source file not found for the specified process: " + processDef.getKogitoProcessId())), managedExecutor);
     }
 
     @Override
-    public CompletableFuture<List<Node>> getProcessDefinitionNodes(String serviceURL, KogitoProcessId processId) {
-        Process<?> process = processes != null ? processes.processById(processId) : null;
+    public CompletableFuture<List<Node>> getProcessDefinitionNodes(ProcessDefinition processDef) {
+        Process<?> process = processes != null ? processes.processById(processDef.getKogitoProcessId()) : null;
         if (process == null) {
             return CompletableFuture.completedFuture(null);
         } else {
@@ -201,7 +201,7 @@ public class KogitoAddonRuntimeClient extends KogitoRuntimeCommonClient implemen
     }
 
     @Override
-    public CompletableFuture<List<Timer>> getProcessInstanceTimers(String serviceUrl, ProcessInstance processInstance) {
+    public CompletableFuture<List<Timer>> getProcessInstanceTimers(ProcessInstance processInstance) {
 
         Process<?> process = processes != null ? processes.processById(processInstance.getKogitoProcessId()) : null;
 
@@ -232,7 +232,7 @@ public class KogitoAddonRuntimeClient extends KogitoRuntimeCommonClient implemen
     }
 
     @Override
-    public CompletableFuture<String> triggerNodeInstance(String serviceURL, ProcessInstance processInstance, String nodeDefinitionId) {
+    public CompletableFuture<String> triggerNodeInstance(ProcessInstance processInstance, String nodeDefinitionId) {
         return CompletableFuture.completedFuture(executeOnProcessInstance(processInstance.getKogitoProcessId(), processInstance.getId(), pInstance -> {
             pInstance.triggerNode(nodeDefinitionId);
 
@@ -246,7 +246,7 @@ public class KogitoAddonRuntimeClient extends KogitoRuntimeCommonClient implemen
     }
 
     @Override
-    public CompletableFuture<String> retriggerNodeInstance(String serviceURL, ProcessInstance processInstance, String nodeInstanceId) {
+    public CompletableFuture<String> retriggerNodeInstance(ProcessInstance processInstance, String nodeInstanceId) {
         return CompletableFuture.completedFuture(executeOnProcessInstance(processInstance.getKogitoProcessId(), processInstance.getId(), pInstance -> {
             pInstance.retriggerNodeInstance(nodeInstanceId);
 
@@ -260,7 +260,7 @@ public class KogitoAddonRuntimeClient extends KogitoRuntimeCommonClient implemen
     }
 
     @Override
-    public CompletableFuture<String> cancelNodeInstance(String serviceURL, ProcessInstance processInstance, String nodeInstanceId) {
+    public CompletableFuture<String> cancelNodeInstance(ProcessInstance processInstance, String nodeInstanceId) {
         return CompletableFuture.completedFuture(executeOnProcessInstance(processInstance.getKogitoProcessId(), processInstance.getId(), pInstance -> {
             pInstance.cancelNodeInstance(nodeInstanceId);
 
@@ -304,7 +304,7 @@ public class KogitoAddonRuntimeClient extends KogitoRuntimeCommonClient implemen
     }
 
     @Override
-    public CompletableFuture<String> rescheduleNodeInstanceSla(String serviceURL, ProcessInstance processInstance, String nodeInstanceId, ZonedDateTime expirationTime) {
+    public CompletableFuture<String> rescheduleNodeInstanceSla(ProcessInstance processInstance, String nodeInstanceId, ZonedDateTime expirationTime) {
         return CompletableFuture.completedFuture(executeOnProcessInstance(processInstance.getKogitoProcessId(), processInstance.getId(), pInstance -> {
             pInstance.updateNodeInstanceSla(nodeInstanceId, expirationTime);
             return "Updated SLA of node instance " + nodeInstanceId;
@@ -312,7 +312,7 @@ public class KogitoAddonRuntimeClient extends KogitoRuntimeCommonClient implemen
     }
 
     @Override
-    public CompletableFuture<String> rescheduleProcessInstanceSla(String serviceURL, ProcessInstance processInstance, ZonedDateTime expirationTime) {
+    public CompletableFuture<String> rescheduleProcessInstanceSla(ProcessInstance processInstance, ZonedDateTime expirationTime) {
         return CompletableFuture.completedFuture(executeOnProcessInstance(processInstance.getKogitoProcessId(), processInstance.getId(), pInstance -> {
             pInstance.updateProcessInstanceSla(expirationTime);
             return "Updated SLA of process instance " + processInstance.getId();
