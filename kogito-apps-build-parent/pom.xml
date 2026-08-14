@@ -35,8 +35,6 @@
     <name>Kogito Apps :: Build Parent BOM</name>
 
     <properties>
-        <skip.springboot>false</skip.springboot>
-
         <failsafe.include>**/*IT.java</failsafe.include>
         <failsafe.exclude>**/Native*IT.java</failsafe.exclude>
         <tests.quarkus.http.port>0</tests.quarkus.http.port>
@@ -70,9 +68,7 @@
         <version.org.json>20231013</version.org.json>
         <version.org.mapstruct>1.5.5.Final</version.org.mapstruct>
         <version.org.skyscreamer>1.5.1</version.org.skyscreamer>
-        <!-- graphql-java upgraded from 22.0 to 24.3 for java-dataloader 3.4.0+ compatibility
-             required by Spring Boot 3.5.x (DataLoaderOptions.newDefaultOptions()).
-             extended-scalars version must match graphql-java major version. -->
+
         <version.com.graphql-java>24.3</version.com.graphql-java>
         <version.com.graphql-java-extended-scalars>24.0</version.com.graphql-java-extended-scalars>
 
@@ -251,7 +247,6 @@
                 </property>
             </activation>
             <properties>
-                <skip.springboot>true</skip.springboot>
                 <failsafe.include>**/Native*IT.java</failsafe.include>
                 <failsafe.exclude></failsafe.exclude>
                 <quarkus.native.native-image-xmx>8g</quarkus.native.native-image-xmx>
@@ -282,7 +277,6 @@
                 </property>
             </activation>
             <properties>
-                <skip.springboot>true</skip.springboot>
                 <formatter.skip>true</formatter.skip>
                 <skipITs>true</skipITs>
                 <skipTests>true</skipTests>

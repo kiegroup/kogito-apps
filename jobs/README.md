@@ -29,7 +29,7 @@ The current support storage is only:
 
 *   jpa
 
-At present Addons jobs supports quarkus and spring boot
+At present Addons jobs supports Quarkus
 
 The properties supported are:
 * kogito.jobs-service.numberOfWorkerThreads: maximum of number of worker thread to execute timeouts (default is 10)
