@@ -31,7 +31,7 @@ Due to the nature of the system it support different types of storage
 *   mongodb
 *   jpa
 
-At present for compact configuration it only support quarkus runtime. For distributed supports both runtimes quarkus and springboot.
+Supports Quarkus runtime. 
 
 
 ## Compact architecture
@@ -85,17 +85,7 @@ to start working with the queries defined by the schema aforementioned.
 ## Distributed deployment
 
 For distributed you need to specify and addons you will need to deploy the data index as service and include the event publisher
-
-	
-
-     <dependency>
-        <groupId>org.kie.kogito</groupId>
-        <artifactId>kogito-addons-springboot-events-process-kafka</artifactId>
-     </dependency>
-
-	
-
-or for quarkus
+ 
 	
 
      <dependency>

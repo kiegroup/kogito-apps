@@ -136,7 +136,6 @@ public class CompositeTestResource implements TestResource {
                     // external access url
                     String kafkaURL = kafka.getBootstrapServers();
                     properties.put("kafka.bootstrap.servers", kafkaURL);
-                    properties.put("spring.kafka.bootstrap-servers", kafkaURL);
 
                     //internal access
                     final String kafkaInternalUrl = hostName(kafka) + ":29092";
