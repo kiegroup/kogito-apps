@@ -60,7 +60,6 @@ public class DataIndexPostgreSqlKafkaResource implements TestResource {
         kafka.start();
         String kafkaURL = kafka.getBootstrapServers();
         properties.put("kafka.bootstrap.servers", kafkaURL);
-        properties.put("spring.kafka.bootstrap-servers", kafkaURL);
 
         dataIndex.addProtoFileFolder();
         dataIndex.withNetwork(network);
