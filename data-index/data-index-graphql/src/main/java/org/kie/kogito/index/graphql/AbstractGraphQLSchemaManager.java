@@ -18,8 +18,13 @@
  */
 package org.kie.kogito.index.graphql;
 
-import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -30,8 +35,14 @@ import org.kie.kogito.index.api.KogitoRuntimeClient;
 import org.kie.kogito.index.graphql.query.GraphQLQueryOrderByParser;
 import org.kie.kogito.index.graphql.query.GraphQLQueryParser;
 import org.kie.kogito.index.graphql.query.GraphQLQueryParserRegistry;
-import org.kie.kogito.index.model.*;
+import org.kie.kogito.index.model.Job;
+import org.kie.kogito.index.model.Node;
+import org.kie.kogito.index.model.NodeInstance;
+import org.kie.kogito.index.model.ProcessDefinition;
+import org.kie.kogito.index.model.ProcessDefinitionKey;
+import org.kie.kogito.index.model.ProcessInstance;
 import org.kie.kogito.index.model.Timer;
+import org.kie.kogito.index.model.URIInfo;
 import org.kie.kogito.index.service.DataIndexServiceException;
 import org.kie.kogito.index.storage.DataIndexStorageService;
 import org.kie.kogito.internal.process.runtime.KogitoProcessInstance;
@@ -157,7 +168,7 @@ public abstract class AbstractGraphQLSchemaManager implements GraphQLSchemaManag
         if (source == null || source.getEndpoint() == null) {
             return null;
         }
-        return URI.create(source.getEndpoint()).getPath();
+        return URIInfo.buildURIInfo(source).truncatedURI().toString();
     }
 
     public String getProcessInstanceServiceUrl(DataFetchingEnvironment env) {

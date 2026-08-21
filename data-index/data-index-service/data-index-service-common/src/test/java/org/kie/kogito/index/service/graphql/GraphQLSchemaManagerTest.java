@@ -19,6 +19,7 @@
 package org.kie.kogito.index.service.graphql;
 
 import org.junit.jupiter.api.Test;
+import org.kie.kogito.index.model.ProcessDefinition;
 import org.kie.kogito.index.model.ProcessInstance;
 import org.mockito.Mockito;
 
@@ -55,6 +56,24 @@ public class GraphQLSchemaManagerTest {
         assertThat(schemaManager.getProcessInstanceServiceUrl(getEnv("demo.orderItems", "http://localhost:8080/orderItems"))).isEqualTo("http://localhost:8080");
     }
 
+    @Test
+    public void testNullProcessDefinitionServiceUrl() {
+        assertThat(schemaManager.getProcessDefinitionServiceUrl(getDefEnv(null, null, null))).isNull();
+        assertThat(schemaManager.getProcessDefinitionServiceUrl(getDefEnv("travels", null, null))).isNull();
+    }
+
+    @Test
+    public void testUrlProcessDefinitionServiceUrl() {
+        assertThat(schemaManager.getProcessDefinitionServiceUrl(getDefEnv("travels", "1.0", "http://localhost:8080/travels"))).isEqualTo("http://localhost:8080");
+        assertThat(schemaManager.getProcessDefinitionServiceUrl(getDefEnv("travels", "http://travels.example.com/travels"))).isEqualTo("http://travels.example.com");
+    }
+
+    @Test
+    public void testUrlWithVersionProcessDefinitionServiceUrl() {
+        assertThat(schemaManager.getProcessDefinitionServiceUrl(getDefEnv("callbackstatetimeouts", "0.0.1", "http://callbackstatetimeouts.example.com/callbackstatetimeouts/0.0.1")))
+                .isEqualTo("http://callbackstatetimeouts.example.com");
+    }
+
     private DataFetchingEnvironment getEnv(String processId, String endpoint) {
         DataFetchingEnvironment env = Mockito.mock(DataFetchingEnvironment.class);
         Mockito.when(env.getSource()).thenReturn(getProcessInstance(processId, endpoint));
@@ -66,5 +85,23 @@ public class GraphQLSchemaManagerTest {
         pi.setProcessId(processId);
         pi.setEndpoint(endpoint);
         return pi;
+    }
+
+    private DataFetchingEnvironment getDefEnv(String id, String endpoint) {
+        return getDefEnv(id, null, endpoint);
+    }
+
+    private DataFetchingEnvironment getDefEnv(String id, String version, String endpoint) {
+        DataFetchingEnvironment env = Mockito.mock(DataFetchingEnvironment.class);
+        Mockito.when(env.getSource()).thenReturn(getProcessDefinition(id, version, endpoint));
+        return env;
+    }
+
+    private ProcessDefinition getProcessDefinition(String id, String version, String endpoint) {
+        ProcessDefinition pd = new ProcessDefinition();
+        pd.setId(id);
+        pd.setVersion(version);
+        pd.setEndpoint(endpoint);
+        return pd;
     }
 }
