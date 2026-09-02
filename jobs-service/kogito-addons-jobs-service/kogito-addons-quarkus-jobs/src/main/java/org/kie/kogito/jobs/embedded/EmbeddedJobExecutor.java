@@ -34,7 +34,6 @@ import org.kie.kogito.jobs.service.model.RecipientInstance;
 import org.kie.kogito.process.Process;
 import org.kie.kogito.process.Processes;
 import org.kie.kogito.services.jobs.impl.TriggerJobCommand;
-import org.kie.kogito.usertask.UserTasks;
 
 import io.smallrye.mutiny.Uni;
 
@@ -52,9 +51,7 @@ public class EmbeddedJobExecutor implements JobExecutor {
     @Inject
     Instance<Processes> processes;
 
-    @Inject
-    Instance<UserTasks> userTasks;
-
+   
     @Inject
     Application application;
 

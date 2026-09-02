@@ -45,13 +45,6 @@ import org.kie.kogito.event.process.ProcessInstanceStateDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceStateEventBody;
 import org.kie.kogito.event.process.ProcessInstanceVariableDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceVariableEventBody;
-import org.kie.kogito.event.usertask.UserTaskInstanceAttachmentDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceAttachmentEventBody;
-import org.kie.kogito.event.usertask.UserTaskInstanceCommentDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceCommentEventBody;
-import org.kie.kogito.event.usertask.UserTaskInstanceEventMetadata;
-import org.kie.kogito.event.usertask.UserTaskInstanceStateDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceStateEventBody;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
 import org.kie.kogito.index.model.Job;
 import org.kie.kogito.index.model.Milestone;
@@ -274,107 +267,8 @@ public final class TestUtils {
         return getObjectMapper().valueToTree(getProcessInstanceVariablesMap());
     }
 
-    public static UserTaskInstanceStateDataEvent getUserTaskCloudEvent(String taskId, String processId, String processInstanceId, String rootProcessInstanceId, String rootProcessId, String state) {
-        return getUserTaskCloudEvent(taskId, processId, processInstanceId, rootProcessInstanceId, rootProcessId, state, "kogito", "STARTED");
-    }
-
-    public static UserTaskInstanceStateDataEvent getUserTaskCloudEvent(String taskId, String processId, String processInstanceId, String rootProcessInstanceId, String rootProcessId, String state,
-            String actualOwner, String eventType) {
-
-        UserTaskInstanceStateEventBody body = UserTaskInstanceStateEventBody.create()
-                .eventType(eventType)
-                .userTaskInstanceId(taskId)
-                .state(state)
-                .userTaskName("TaskName")
-                .userTaskDescription("TaskDescription")
-                .userTaskPriority("High")
-                .actualOwner(actualOwner)
-                .eventDate(new Date())
-                .processInstanceId(processInstanceId)
-                .externalReferenceId("testExternalReferenceId")
-                .build();
-        UserTaskInstanceStateDataEvent event = new UserTaskInstanceStateDataEvent(URI.create("http://localhost:8080/" + processId).toString(), null, null, body.metaData(), body);
-        event.setKogitoProcessId(processId);
-        event.setKogitoProcessInstanceId(processInstanceId);
-        event.setKogitoRootProcessId(rootProcessId);
-        event.setKogitoRootProcessInstanceId(rootProcessInstanceId);
-        return event;
-    }
-
-    public static UserTaskInstanceAttachmentDataEvent getUserTaskAttachmentEvent(String taskId, String processId, String processInstanceId, String rootProcessInstanceId, String rootProcessId,
-            String state,
-            String actualOwner, String attachmentId, URI attachmentURI, String attachmentName, Integer eventType) {
-
-        UserTaskInstanceAttachmentEventBody attachmentBody = UserTaskInstanceAttachmentEventBody.create()
-                .attachmentId(attachmentId)
-                .attachmentName(attachmentName)
-                .attachmentURI(attachmentURI)
-                .eventDate(new Date())
-                .eventType(UserTaskInstanceAttachmentEventBody.EVENT_TYPE_ADDED)
-                .userTaskInstanceId(taskId)
-                .build();
-
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put(UserTaskInstanceEventMetadata.USER_TASK_INSTANCE_ID_META_DATA, taskId);
-        metadata.put(ProcessInstanceEventMetadata.PROCESS_INSTANCE_ID_META_DATA, processInstanceId);
-        metadata.put(UserTaskInstanceEventMetadata.USER_TASK_INSTANCE_STATE_META_DATA, state);
-
-        UserTaskInstanceAttachmentDataEvent attachmentEvent =
-                new UserTaskInstanceAttachmentDataEvent(URI.create("http://localhost:8080/" + processId).toString(), null, null, metadata, attachmentBody);
-        attachmentEvent.setKogitoProcessId(processId);
-        attachmentEvent.setKogitoProcessInstanceId(processInstanceId);
-        attachmentEvent.setKogitoRootProcessId(rootProcessId);
-        attachmentEvent.setKogitoRootProcessInstanceId(rootProcessInstanceId);
-        return attachmentEvent;
-    }
-
-    public static UserTaskInstanceCommentDataEvent getUserTaskCommentEvent(String taskId, String processId, String processInstanceId, String rootProcessInstanceId, String rootProcessId,
-            String state,
-            String actualOwner, String commentId, String commentContent, Integer eventType) {
-
-        UserTaskInstanceCommentEventBody attachmentBody = UserTaskInstanceCommentEventBody.create()
-                .commentId(commentId)
-                .commentContent(commentContent)
-                .eventDate(new Date())
-                .eventType(UserTaskInstanceAttachmentEventBody.EVENT_TYPE_ADDED)
-                .userTaskInstanceId(taskId)
-                .build();
-
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put(UserTaskInstanceEventMetadata.USER_TASK_INSTANCE_ID_META_DATA, taskId);
-        metadata.put(ProcessInstanceEventMetadata.PROCESS_INSTANCE_ID_META_DATA, processInstanceId);
-        metadata.put(UserTaskInstanceEventMetadata.USER_TASK_INSTANCE_STATE_META_DATA, state);
-
-        UserTaskInstanceCommentDataEvent attachmentEvent =
-                new UserTaskInstanceCommentDataEvent(URI.create("http://localhost:8080/" + processId).toString(), null, null, metadata, attachmentBody);
-        attachmentEvent.setKogitoProcessId(processId);
-        attachmentEvent.setKogitoProcessInstanceId(processInstanceId);
-        attachmentEvent.setKogitoRootProcessId(rootProcessId);
-        attachmentEvent.setKogitoRootProcessInstanceId(rootProcessInstanceId);
-        return attachmentEvent;
-    }
-
     private static String getEndpoint(String processId) {
         return URI.create("http://localhost:8080/" + processId).toString();
-    }
-
-    public static UserTaskInstanceAttachmentEventBody getTaskAttachment(String id, String user, String name, String content) {
-        return UserTaskInstanceAttachmentEventBody.create()
-                .attachmentId(id)
-                .eventUser(user)
-                .attachmentName(name)
-                .attachmentURI(content == null ? null : URI.create(content))
-                .eventDate(new Date())
-                .build();
-    }
-
-    public static UserTaskInstanceCommentEventBody getTaskComment(String id, String user, String comment) {
-        return UserTaskInstanceCommentEventBody.create()
-                .commentId(id)
-                .commentContent(comment)
-                .eventUser(user)
-                .eventDate(new Date())
-                .build();
     }
 
     public static KogitoJobCloudEvent getJobCloudEvent(String jobId, String processId, String processInstanceId, String rootProcessInstanceId, String rootProcessId, String status) {
