@@ -36,7 +36,6 @@ import org.kie.kogito.event.process.NodeDefinition;
 import org.kie.kogito.event.process.ProcessDefinitionDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceStateDataEvent;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
 import org.kie.kogito.index.json.JsonUtils;
 import org.kie.kogito.index.model.Job;
@@ -112,8 +111,6 @@ class KogitoIndexEventConverterTest {
     void canConvertNotBufferPayload() {
         assertThat(converter.canConvert(Message.of(new ProcessInstanceDataEvent<>(), Metadata.of(httpMetadata)),
                 ProcessInstanceDataEvent.class)).isFalse();
-        assertThat(converter.canConvert(Message.of(new UserTaskInstanceDataEvent<>(), Metadata.of(httpMetadata)),
-                UserTaskInstanceDataEvent.class)).isFalse();
         assertThat(converter.canConvert(Message.of(KogitoJobCloudEvent.builder().build(), Metadata.of(httpMetadata)),
                 KogitoJobCloudEvent.class)).isFalse();
     }

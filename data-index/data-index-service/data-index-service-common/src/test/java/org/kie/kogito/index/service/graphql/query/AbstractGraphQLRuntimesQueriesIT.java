@@ -30,7 +30,7 @@ import org.kie.kogito.event.process.ProcessInstanceDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceStateDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceVariableDataEvent;
 import org.kie.kogito.event.process.ProcessInstanceVariableEventBody;
-import org.kie.kogito.event.usertask.UserTaskInstanceDataEvent;
+
 import org.kie.kogito.index.api.ExecuteArgs;
 import org.kie.kogito.index.api.KogitoRuntimeClient;
 import org.kie.kogito.index.event.KogitoJobCloudEvent;
@@ -292,7 +292,6 @@ public abstract class AbstractGraphQLRuntimesQueriesIT {
 
     protected abstract String getTestProtobufFileContent() throws Exception;
 
-    protected abstract void indexUserTaskCloudEvent(UserTaskInstanceDataEvent<?> attachmentEvent);
 
     protected abstract void indexProcessCloudEvent(ProcessDefinitionDataEvent definitionEvent);
 

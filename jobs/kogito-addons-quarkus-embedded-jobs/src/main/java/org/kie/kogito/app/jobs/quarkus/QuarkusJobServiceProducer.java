@@ -27,7 +27,7 @@ import org.kie.kogito.app.jobs.spi.memory.MemoryJobContextFactory;
 import org.kie.kogito.app.jobs.spi.memory.MemoryJobStore;
 import org.kie.kogito.process.Processes;
 import org.kie.kogito.uow.UnitOfWorkManager;
-import org.kie.kogito.usertask.UserTasks;
+
 
 import io.quarkus.arc.DefaultBean;
 
@@ -42,9 +42,7 @@ public class QuarkusJobServiceProducer {
     @Inject
     Instance<Processes> processes;
 
-    @Inject
-    Instance<UserTasks> userTasks;
-
+    
     @Inject
     UnitOfWorkManager unitOfWorkManager;
 
