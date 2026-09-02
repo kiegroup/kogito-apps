@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.kie.kogito</groupId>
         <artifactId>jobs-service</artifactId>
-        <version>111-SNAPSHOT</version>
+        <version>999.106.0</version>
     </parent>
 
     <artifactId>jobs-service-storage-jpa</artifactId>
