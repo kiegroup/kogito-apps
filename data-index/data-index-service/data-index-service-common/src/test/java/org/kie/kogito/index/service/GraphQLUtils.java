@@ -20,8 +20,7 @@ package org.kie.kogito.index.service;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -73,8 +72,16 @@ public class GraphQLUtils {
         QUERY_FIELDS.computeIfPresent(ProcessInstance.class, (k, v) -> v + ", childProcessInstances { id, processName }");
         QUERY_FIELDS.computeIfPresent(ProcessInstance.class, (k, v) -> v + ", parentProcessInstance { id, processName }");
 
-        try {
-            JsonNode node = getObjectMapper().readTree(Files.readString(Path.of(Thread.currentThread().getContextClassLoader().getResource("graphql_queries.json").toURI())));
+        try (InputStream input = Thread.currentThread()
+                .getContextClassLoader()
+                .getResourceAsStream("graphql_queries.json")) {
+
+            if (input == null) {
+                throw new IllegalStateException(
+                        "graphql_queries.json not found on classpath");
+            }
+
+            JsonNode node = getObjectMapper().readTree(input);
             for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext();) {
                 Map.Entry<String, JsonNode> entry = it.next();
                 QUERIES.put(entry.getKey(), entry.getValue().toString());
