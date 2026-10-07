@@ -20,6 +20,7 @@ package org.kie.kogito.index.quarkus.json;
 
 import org.kie.kogito.index.json.JsonUtils;
 
+import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkus.jackson.ObjectMapperCustomizer;
@@ -31,6 +32,8 @@ public class ObjectMapperProducer implements ObjectMapperCustomizer {
 
     @Override
     public void customize(ObjectMapper objectMapper) {
+        StreamReadConstraints.overrideDefaultStreamReadConstraints(
+                StreamReadConstraints.builder().maxStringLength(Integer.MAX_VALUE).build());
         JsonUtils.configure(objectMapper);
     }
 }
