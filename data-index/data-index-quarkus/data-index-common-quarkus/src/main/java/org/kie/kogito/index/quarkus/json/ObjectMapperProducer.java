@@ -18,8 +18,12 @@
  */
 package org.kie.kogito.index.quarkus.json;
 
+import java.util.OptionalInt;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.kie.kogito.index.json.JsonUtils;
 
+import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkus.jackson.ObjectMapperCustomizer;
@@ -29,8 +33,13 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class ObjectMapperProducer implements ObjectMapperCustomizer {
 
+    @ConfigProperty(name = "kogito.jackson.limits.string-length")
+    protected OptionalInt maxStringLength;
+
     @Override
     public void customize(ObjectMapper objectMapper) {
+        maxStringLength.ifPresent(v -> StreamReadConstraints.overrideDefaultStreamReadConstraints(
+                StreamReadConstraints.builder().maxStringLength(v).build()));
         JsonUtils.configure(objectMapper);
     }
 }

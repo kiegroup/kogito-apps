@@ -25,6 +25,7 @@ import java.time.OffsetDateTime;
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.reactive.messaging.Message;
@@ -89,12 +90,20 @@ class KogitoIndexEventConverterTest {
     private MultiMap headers;
     private QuarkusIndexEventConverter converter;
 
+    private static class TestObjectMapperProducer extends ObjectMapperProducer {
+        @Override
+        public void customize(ObjectMapper objectMapper) {
+            super.maxStringLength = OptionalInt.empty();
+            super.customize(objectMapper);
+        }
+    }
+
     @BeforeEach
     void setUp() {
         headers = MultiMap.caseInsensitiveMultiMap();
         lenient().doReturn(headers).when(httpMetadata).getHeaders();
         ObjectMapper objectMapper = JsonUtils.getObjectMapper();
-        new ObjectMapperProducer().customize(objectMapper);
+        new TestObjectMapperProducer().customize(objectMapper);
         converter = new QuarkusIndexEventConverter(objectMapper);
         converter.init();
     }
